@@ -68,6 +68,14 @@ module.exports = function(app, sql) {
       return
     }
 
+    //check if account connected to this profile is valid
+    const account_type = await fetchAccountType(profile.account_id, sql)
+
+    if (account_type != 'profile'){
+      res.status(404).send("invalid account. make sure the account is a profile")
+      return
+    }
+
     //adding data to database
     try {
       const result = await sql.query`insert into profile (profile_id, fname, lname, phone, email, username, password, account_id) values (${profile.profile_id}, ${profile.fname}, ${profile.lname}, ${profile.phone}, ${profile.email}, ${profile.username}, ${profile.password}, ${profile.account_id})`
@@ -81,5 +89,20 @@ module.exports = function(app, sql) {
     }
 
   })
+
+}
+
+
+async function fetchAccountType(account_id, sql) {
+
+  try {
+    const result = await sql.query`select account_type from account where account_id = ${account_id}`
+    // console.log(result.recordset[0].account_type)
+    return result.recordset[0].account_type
+  }
+  catch (err) {
+    console.log(err)
+    return null
+  }
 
 }

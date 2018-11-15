@@ -15,6 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 require('./account')(app, sql)
 require('./profile')(app, sql)
 require('./page')(app, sql)
+require('./member')(app, sql)
 
 async function connectToDatabase() {
   // creates connection to databse

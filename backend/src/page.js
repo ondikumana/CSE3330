@@ -67,6 +67,14 @@ module.exports = function(app, sql) {
       return
     }
 
+    //check if account connected to this page is valid
+    const account_type = await fetchAccountType(page.account_id, sql)
+
+    if (account_type != 'page'){
+      res.status(404).send("invalid account. make sure the account is a page")
+      return
+    }
+
     //adding data to database
     try {
       const result = await sql.query`insert into page (page_id, page_name, logo_url, header_image_url, description, category, account_id) values (${page.page_id}, ${page.page_name}, ${page.logo_url}, ${page.header_image_url}, ${page.description}, ${page.category}, ${page.account_id})`
@@ -80,5 +88,19 @@ module.exports = function(app, sql) {
     }
 
   })
+
+}
+
+async function fetchAccountType(account_id, sql) {
+
+  try {
+    const result = await sql.query`select account_type from account where account_id = ${account_id}`
+    // console.log(result.recordset[0].account_type)
+    return result.recordset[0].account_type
+  }
+  catch (err) {
+    console.log(err)
+    return null
+  }
 
 }
