@@ -28,7 +28,6 @@ module.exports = function(app, sql) {
       return
     }
 
-
     const member = {
       page_id: parseInt(req.body.page_id),
       profile_id: req.body.profile_id,

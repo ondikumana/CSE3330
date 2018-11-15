@@ -14,10 +14,13 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
 // routes in different files
-require('./account')(app, sql)
-require('./profile')(app, sql)
-require('./page')(app, sql)
-require('./member')(app, sql)
+require('./Account/Account')(app, sql)
+require('./Profile/Profile')(app, sql)
+require('./Page/Page')(app, sql)
+require('./Page/Member')(app, sql)
+require('./Page/PageView')(app, sql)
+require('./Page/Admin')(app, sql)
+require('./Message/Message')(app, sql)
 
 async function connectToDatabase() {
   // creates connection to databse

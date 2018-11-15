@@ -1,6 +1,6 @@
 CREATE TABLE Account (
 account_id INT NOT NULL PRIMARY KEY,
-creation_date DATE,
+creation_date DATETIME DEFAULT(getdate()),
 account_type VARCHAR(7) NOT NULL
 );
 
@@ -52,15 +52,15 @@ FOREIGN KEY (profile_id) REFERENCES Profile(profile_id)
 CREATE TABLE Admin (
 page_id INT NOT NULL ,
 profile_id INT NOT NULL,
-admin_since_date DATE,
+admin_since_date DATETIME DEFAULT(getdate()),
 FOREIGN KEY (page_id) REFERENCES Page(page_id),
 FOREIGN KEY (profile_id) REFERENCES Profile(profile_id)
 );
 
 CREATE TABLE Message (
-message_id INT NOT NULL PRIMARY KEY,
 recipient_id INT NOT NULL,
 sender_id INT NOT NULL,
+sent_time DATETIME DEFAULT(getdate()),
 sent BIT,
 delivered BIT,
 message_read BIT,
