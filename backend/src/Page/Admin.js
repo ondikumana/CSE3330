@@ -7,6 +7,7 @@ module.exports = function(app, sql) {
 
     if (!page_id) {
       res.status(404).send('specify page_id')
+      return
     }
 
     try {
