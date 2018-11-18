@@ -15,12 +15,22 @@ app.use(bodyParser.urlencoded({ extended: true }))
 
 // routes in different files
 require('./Account/Account')(app, sql)
+
 require('./Profile/Profile')(app, sql)
+
 require('./Page/Page')(app, sql)
 require('./Page/Member')(app, sql)
 require('./Page/PageView')(app, sql)
 require('./Page/Admin')(app, sql)
+
 require('./Message/Message')(app, sql)
+
+require('./Post/Post')(app, sql)
+require('./Post/PostLike')(app, sql)
+require('./Post/PostView')(app, sql)
+
+require('./Comment/Comment')(app, sql)
+require('./Comment/CommentLike')(app, sql)
 
 async function connectToDatabase() {
   // creates connection to databse

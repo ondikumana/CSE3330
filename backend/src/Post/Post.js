@@ -6,7 +6,6 @@ module.exports = function(app, sql) {
 
     const author_id = req.query.author_id ? parseInt(req.query.author_id) : null
 
-
     try {
       const result = author_id != null ? await sql.query`select * from post where author_id = ${author_id}` : await sql.query`select * from post`
       res.status(200).send(result.recordset)
@@ -55,7 +54,5 @@ module.exports = function(app, sql) {
     }
 
   })
-
-}
 
 }

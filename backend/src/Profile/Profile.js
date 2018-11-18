@@ -6,7 +6,6 @@ module.exports = function(app, sql) {
 
     const profile_id = req.query.profile_id ? parseInt(req.query.profile_id) : null
 
-
     try {
       const result = profile_id != null ? await sql.query`select * from profile where profile_id = ${profile_id}` : await sql.query`select * from profile`
       res.status(200).send(result.recordset)
@@ -17,7 +16,6 @@ module.exports = function(app, sql) {
     }
 
   })
-
 
   app.post('/create_profile', async (req, res) =>  {
     // creates a profile given an object of info in the body. Info validation is to be done from frontend
