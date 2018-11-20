@@ -1,11 +1,16 @@
 // container id 6120d3809a1b
 
 var express = require('express')
-var app = express()
 var path = require('path')
 const sql = require('mssql')
 const async = require("async")
 const bodyParser = require('body-parser')
+const cors = require('cors')
+
+var app = express()
+
+cors({credentials: true, origin: true})
+app.use(cors())
 
 connectToDatabase()
 

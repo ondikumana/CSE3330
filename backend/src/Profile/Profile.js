@@ -4,10 +4,30 @@ module.exports = function(app, sql) {
   app.get('/fetch_profiles', async (req, res) =>  {
     // gets all accounts or one account if the account id is provided in the query params
 
+    const account_id = req.query.account_id ? parseInt(req.query.account_id) : null
     const profile_id = req.query.profile_id ? parseInt(req.query.profile_id) : null
+    const email = req.query.email ? req.query.email : null
+    const username = req.query.username ? req.query.username : null
 
     try {
-      const result = profile_id != null ? await sql.query`select * from profile where profile_id = ${profile_id}` : await sql.query`select * from profile`
+      let result
+
+      if (account_id){
+        result = await sql.query`select * from profile where account_id = ${account_id}`
+      }
+      else if (profile_id){
+        result = await sql.query`select * from profile where profile_id = ${profile_id}`
+      }
+      else if (email) {
+        result = await sql.query`select * from profile where email = ${email}`
+      }
+      else if (username) {
+        result = await sql.query`select * from profile where username = ${username}`
+      }
+      else {
+        result = await await sql.query`select * from profile`
+      }
+
       res.status(200).send(result.recordset)
     }
     catch (err) {
