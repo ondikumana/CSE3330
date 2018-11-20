@@ -4,6 +4,22 @@ import { Redirect } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
 import Post from './Post'
+import NewPost from './NewPost';
+
+const postContainer = {
+    marginTop: '20px',
+    marginBottom: '20px'
+}
+
+const container = {
+    marginTop: '20px',
+    marginBottom: '20px',
+    paddingLeft: '20px'
+}
+
+const newPostButtonStyle = {
+    marginTop: '10px'
+}
 
 class Home extends Component {
     state = {
@@ -11,11 +27,12 @@ class Home extends Component {
         posts: null,
         comments: null,
         names: null,
-        logOut: false
+        logOut: false,
+        addingPost: false
     }
 
     fetchPosts = () => {
-        axios.get(`${URL}/fetch_posts?author_id=${this.state.signedInUser.account_id}`)
+        axios.get(`${URL}/fetch_posts?destination_id=${this.state.signedInUser.account_id}`)
             .then((databaseResponse) => {
 
                 this.setState({ posts: databaseResponse.data })
@@ -37,7 +54,7 @@ class Home extends Component {
     }
 
     render() {
-        const { signedInUser, posts, comments, logOut, names } = this.state
+        const { signedInUser, posts, logOut, addingPost } = this.state
 
         if (!JSON.parse(localStorage.getItem('signedInUser')) || logOut) {
             return <Redirect push to="/login" />
@@ -48,31 +65,42 @@ class Home extends Component {
                 <h1> Home </h1>
 
                 <h3>Your Info</h3>
-                {signedInUser &&
-                    <Segment compact>
-                        <div> <b>Profile ID: </b> {signedInUser.profile_id} </div>
-                        <div> <b>First Name: </b> {signedInUser.fname} </div>
-                        <div> <b>Last Name: </b> {signedInUser.lname} </div>
-                        <div> <b>Phone: </b> {signedInUser.phone} </div>
-                        <div> <b>Email: </b> {signedInUser.email} </div>
-                        <div> <b>Username: </b> {signedInUser.username} </div>
-                        <div> <b>Account ID: </b> {signedInUser.account_id} </div>
-                    </Segment>
-                }
+                <Container style={container}>
+                    {signedInUser &&
+                        <Segment compact>
+                            <div> <b>Profile ID: </b> {signedInUser.profile_id} </div>
+                            <div> <b>First Name: </b> {signedInUser.fname} </div>
+                            <div> <b>Last Name: </b> {signedInUser.lname} </div>
+                            <div> <b>Phone: </b> {signedInUser.phone} </div>
+                            <div> <b>Email: </b> {signedInUser.email} </div>
+                            <div> <b>Username: </b> {signedInUser.username} </div>
+                            <div> <b>Account ID: </b> {signedInUser.account_id} </div>
+                        </Segment>
+                    }
+                </Container>
+
 
                 <h3>Posts</h3>
-                {posts && posts.length > 0 &&
-                    posts.map((post) => {
-                        return (
-                            <Container key={post.post_id}>
-                                <Post post={post} />
+                <Container style={container}>
+                    {posts && posts.length > 0 &&
+                        posts.map((post) => {
+                            return (
+                                <Container key={post.post_id} style={postContainer}>
+                                    <Post post={post} />
+                                </Container>
+                            )
+                        })
+                    }
+                    {addingPost && 
+                        <NewPost
+                            style={postContainer} 
+                            doneAddingPost={ () => { this.setState({ addingPost: false }); this.fetchPosts() }} 
+                            cancelNewPost={ () => this.setState({ addingPost: false }) } /> 
+                    }
+                    <Button compact onClick={ () => this.setState({ addingPost: true }) }> New Post </Button>
+                </Container>
 
-                            </Container>
-                        )
-                    })
-                }
-
-                <Button onClick={this.signOut}> Log Out </Button>
+                <Button style={newPostButtonStyle} compact onClick={this.signOut}> Log Out </Button>
 
             </Container>
         )

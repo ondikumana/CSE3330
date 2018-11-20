@@ -46,7 +46,7 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into postview (post_id, viewed_by_id, time) values (${postView.post_id}, ${postView.liked_by_id}, DEFAULT)`
+      const result = await sql.query`insert into postview (post_id, viewed_by_id, time) values (${postView.post_id}, ${postView.viewed_by_id}, DEFAULT)`
       res.status(200).send(result)
       return
     }

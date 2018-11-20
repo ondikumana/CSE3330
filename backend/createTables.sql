@@ -73,9 +73,11 @@ CREATE TABLE Post (
 post_id INT NOT NULL IDENTITY(3000, 1) PRIMARY KEY,
 time DATETIME DEFAULT(getdate()),
 author_id INT NOT NULL,
+destination_id INT NOT NULL,
 attachment_url VARCHAR(200),
 body VARCHAR(2000) NOT NULL,
 FOREIGN KEY (author_id) REFERENCES Account(account_id)
+FOREIGN KEY (destination_id) REFERENCES Account(account_id)
 );
 
 CREATE TABLE PostLike (
@@ -86,6 +88,8 @@ FOREIGN KEY (post_id) REFERENCES Post(post_id),
 FOREIGN KEY (liked_by_id) REFERENCES Account(account_id)
 );
 
+ALTER TABLE PostLike ADD CONSTRAINT unique_postlike UNIQUE(post_id, liked_by_id);
+
 CREATE TABLE PostView (
 post_id INT NOT NULL,
 viewed_by_id INT NOT NULL,
@@ -93,6 +97,8 @@ time DATETIME DEFAULT(getdate()),
 FOREIGN KEY (post_id) REFERENCES Post(post_id),
 FOREIGN KEY (viewed_by_id) REFERENCES Account(account_id)
 );
+
+ALTER TABLE PostView ADD CONSTRAINT unique_postview UNIQUE(post_id, viewed_by_id);
 
 CREATE TABLE Comment (
 comment_id INT NOT NULL IDENTITY(4000, 1) PRIMARY KEY,
@@ -112,3 +118,5 @@ time DATETIME DEFAULT(getdate()),
 FOREIGN KEY (comment_id) REFERENCES Comment(comment_id),
 FOREIGN KEY (liked_by_id) REFERENCES Account(account_id)
 );
+
+ALTER TABLE CommentLike ADD CONSTRAINT unique_commentlike UNIQUE(comment_id, liked_by_id);

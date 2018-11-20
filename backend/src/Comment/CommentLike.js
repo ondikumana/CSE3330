@@ -58,5 +58,42 @@ module.exports = function(app, sql) {
 
   })
 
+  app.post('/create_comment_like', async (req, res) =>  {
+    // removes a comment like given an object of info in the body
+
+    if (!req.body) {
+      res.status(404).send("missing body")
+      return
+    }
+
+    const commentLike = {
+      comment_id: parseInt(req.body.comment_id),
+      liked_by_id: parseInt(req.body.liked_by_id)
+    }
+
+    //body validation
+    if (!commentLike.comment_id) {
+      res.status(404).send("missing comment_id. Make sure it's an int")
+      return
+    }
+    if (!commentLike.liked_by_id) {
+      res.status(404).send("missing liked_by_id. Make sure it's an int")
+      return
+    }
+
+    //adding data to database
+    try {
+      const result = await sql.query`delete from commentlike where comment_id = ${commentLike.comment_id} and liked_by_id = ${commentLike.liked_by_id}`
+      res.status(200).send(result)
+      return
+    }
+    catch (err) {
+      console.log(err.originalError.info.message)
+      res.status(404).send(err.originalError.info.message)
+      return
+    }
+
+  })
+
 
 }
