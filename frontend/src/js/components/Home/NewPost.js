@@ -9,13 +9,14 @@ const textAreaStyle = {
 
 class NewPost extends Component {
     state = {
+        adminActivePage: null,
         signedInUser: null,
         postText: ''
     }
 
     postPost = () => {
-        const { signedInUser, postText } = this.state
-        const { doneAddingPost } = this.props
+        const { signedInUser, postText, adminActivePage } = this.state
+        const { doneAddingPost, destinationId, adminActive } = this.props
 
         if (postText.length == 0) {
             console.log('empty post')
@@ -23,7 +24,8 @@ class NewPost extends Component {
         }
 
         axios.post(`${URL}/create_post`, {
-            author_id: signedInUser.account_id,
+            author_id: adminActive ? adminActivePage.account_id : signedInUser.account_id,
+            destination_id: destinationId,
             body: postText
         })
             .then(() => {
@@ -50,11 +52,13 @@ class NewPost extends Component {
 
     componentDidMount = () => {
         const signedInUser = JSON.parse(localStorage.getItem('signedInUser'))
-        this.setState({ signedInUser: signedInUser })
+        const adminActivePage = JSON.parse(localStorage.getItem('adminActivePage'))
+        this.setState({ signedInUser: signedInUser, adminActivePage: adminActivePage })
     }
 
     render() {
-        const { signedInUser, postText } = this.state
+        const { signedInUser, postText, adminActivePage } = this.state
+        const { adminActive } = this.props
 
         return (
             <div>
@@ -62,9 +66,9 @@ class NewPost extends Component {
                     <Segment style={textAreaStyle}>
                         <Comment.Group>
                             <Comment>
-                                <Comment.Avatar src={`https://ui-avatars.com/api/?name=${signedInUser.fname + ' ' + signedInUser.lname}`} />
+                                <Comment.Avatar src={ adminActive ? `https://ui-avatars.com/api/?name=${adminActivePage.page_name}` : `https://ui-avatars.com/api/?name=${signedInUser.fname + ' ' + signedInUser.lname}` } />
                                 <Comment.Content>
-                                    <Comment.Author>{signedInUser.fname + ' ' + signedInUser.lname}</Comment.Author>
+                                    <Comment.Author>{adminActive ? adminActivePage.page_name : signedInUser.fname + ' ' + signedInUser.lname}</Comment.Author>
                                     <Comment.Text>
                                         <Form>
                                             <TextArea

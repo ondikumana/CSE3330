@@ -37,6 +37,8 @@ require('./Post/PostView')(app, sql)
 require('./Comment/Comment')(app, sql)
 require('./Comment/CommentLike')(app, sql)
 
+require('./Category/Category')(app, sql)
+
 async function connectToDatabase() {
   // creates connection to databse
   try {

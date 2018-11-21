@@ -6,13 +6,14 @@ import URL from '../../../BackendUrl'
 class NewComment extends Component {
 
     state = {
+        adminActivePage: null,
         signedInUser: null,
         commentText: ''
     }
 
     postComment = () => {
-        const { signedInUser, commentText } = this.state
-        const { postId, doneAddingComment } = this.props
+        const { signedInUser, commentText, adminActivePage } = this.state
+        const { postId, doneAddingComment, adminActive } = this.props
 
         if (commentText.length == 0) {
             console.log('empty comment')
@@ -21,7 +22,7 @@ class NewComment extends Component {
 
         axios.post(`${URL}/create_comment`, {
             post_id: postId,
-            author_id: signedInUser.account_id,
+            author_id: adminActive ? adminActivePage.account_id : signedInUser.account_id, 
             body: commentText
         })
             .then(() => {
@@ -48,20 +49,22 @@ class NewComment extends Component {
 
     componentDidMount = () => {
         const signedInUser = JSON.parse(localStorage.getItem('signedInUser'))
-        this.setState({ signedInUser: signedInUser })
+        const adminActivePage = JSON.parse(localStorage.getItem('adminActivePage'))
+        this.setState({ signedInUser: signedInUser, adminActivePage: adminActivePage })
     }
 
     render() {
-        const { signedInUser, commentText } = this.state
+        const { signedInUser, commentText, adminActivePage } = this.state
+        const { adminActive } = this.props
 
         return (
             <div>
                 {signedInUser &&
                     <Comment.Group>
                         <Comment>
-                            <Comment.Avatar src={`https://ui-avatars.com/api/?name=${signedInUser.fname + ' ' + signedInUser.lname}`} />
+                            <Comment.Avatar src={adminActive ? `https://ui-avatars.com/api/?name=${adminActivePage.page_name}` : `https://ui-avatars.com/api/?name=${signedInUser.fname + ' ' + signedInUser.lname}`} />
                             <Comment.Content>
-                                <Comment.Author>{signedInUser.fname + ' ' + signedInUser.lname}</Comment.Author>
+                                <Comment.Author>{adminActive ? adminActivePage.page_name : signedInUser.fname + ' ' + signedInUser.lname}</Comment.Author>
                                 <Comment.Text>
                                     <Input
                                         value={commentText}

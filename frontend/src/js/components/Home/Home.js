@@ -5,6 +5,7 @@ import axios from 'axios'
 import URL from '../../../BackendUrl'
 import Post from './Post'
 import NewPost from './NewPost';
+import SearchBar from './SearchBar';
 
 const postContainer = {
     marginTop: '20px',
@@ -18,7 +19,8 @@ const container = {
 }
 
 const newPostButtonStyle = {
-    marginTop: '10px'
+    marginTop: '10px',
+    marginBottom: '10px'
 }
 
 class Home extends Component {
@@ -64,7 +66,9 @@ class Home extends Component {
             <Container>
                 <h1> Home </h1>
 
-                <h3>Your Info</h3>
+                <SearchBar />
+                
+                <h3>My Info</h3>
                 <Container style={container}>
                     {signedInUser &&
                         <Segment compact>
@@ -97,7 +101,7 @@ class Home extends Component {
                             doneAddingPost={ () => { this.setState({ addingPost: false }); this.fetchPosts() }} 
                             cancelNewPost={ () => this.setState({ addingPost: false }) } /> 
                     }
-                    <Button compact onClick={ () => this.setState({ addingPost: true }) }> New Post </Button>
+                    {posts && <Button compact onClick={ () => this.setState({ addingPost: true }) }> {posts.length == 0 ? 'Create First Post' : 'New Post'} </Button>}
                 </Container>
 
                 <Button style={newPostButtonStyle} compact onClick={this.signOut}> Log Out </Button>

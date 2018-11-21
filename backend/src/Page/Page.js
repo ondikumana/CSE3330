@@ -6,10 +6,23 @@ module.exports = function(app, sql) {
     // gets all accounts or one account if the account id is provided in the query params
 
     const page_id = req.query.page_id ? parseInt(req.query.page_id) : null
+    const account_id = req.query.account_id ? parseInt(req.query.account_id) : null
 
 
     try {
-      const result = page_id != null ? await sql.query`select * from profile where page = ${page_id}` : await sql.query`select * from page`
+      let result
+      if (page_id && account_id) {
+        result = await sql.query`select * from page where account_id = ${account_id} and page_id = ${page_id}`
+      }
+      else if (page_id && !account_id) {
+        result = await sql.query`select * from page where page_id = ${page_id}`
+      }
+      else if (!page_id && account_id) {
+        result = await sql.query`select * from page where account_id = ${account_id}`
+      }
+      else {
+        result = await sql.query`select * from page`
+      }
       res.status(200).send(result.recordset)
     }
     catch (err) {

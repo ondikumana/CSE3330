@@ -26,7 +26,8 @@ class Post extends Component {
         postViews: null,
         addingComment: false,
         showComments: false,
-        postLiked: false
+        postLiked: false,
+        accountType: null
     }
 
     fetchComments = () => {
@@ -41,7 +42,18 @@ class Post extends Component {
 
                 for (let j = 0; j < databaseResponse.data.length; j++) {
                     const comment = databaseResponse.data[j];
-                    this.addName(comment.author_id)
+
+                    axios.get(`${URL}/fetch_accounts?account_id=${comment.author_id}`)
+                        .then((databaseResponse) => {
+
+                            const accountType = databaseResponse.data[0].account_type
+
+                            this.addName(comment.author_id, accountType)
+
+                        })
+
+                        .catch(e => console.log(e))
+                    
                 }
 
                 this.setState({
@@ -54,21 +66,40 @@ class Post extends Component {
 
     }
 
-    addName = (author_id) => {
+    addName = (author_id, accountType) => {
 
-        axios.get(`${URL}/fetch_profiles?account_id=${author_id}`)
-            .then((databaseResponse) => {
-                const fname = databaseResponse.data[0].fname
-                const lname = databaseResponse.data[0].lname
-                let names = this.state.names || {}
-                names[author_id] = fname + ' ' + lname
+        if (accountType == 'profile') {
+            axios.get(`${URL}/fetch_profiles?account_id=${author_id}`)
+                .then((databaseResponse) => {
+                    const fname = databaseResponse.data[0].fname
+                    const lname = databaseResponse.data[0].lname
+                    let names = this.state.names || {}
+                    names[author_id] = fname + ' ' + lname
 
-                this.setState({
-                    names: names
+                    this.setState({
+                        names: names
+                    })
                 })
-            })
 
-            .catch(e => console.log(e))
+                .catch(e => console.log(e))
+        }
+        else {
+            axios.get(`${URL}/fetch_pages?account_id=${author_id}`)
+                .then((databaseResponse) => {
+
+                    const pageName = databaseResponse.data[0].page_name
+
+                    let names = this.state.names || {}
+
+                    names[author_id] = pageName
+
+                    this.setState({
+                        names: names
+                    })
+                })
+
+                .catch(e => console.log(e))
+        }
 
     }
 
@@ -107,6 +138,21 @@ class Post extends Component {
                 this.setState({
                     postViews: databaseResponse.data
                 })
+
+            })
+
+            .catch(e => console.log(e))
+    }
+
+    fetchPostAuthorAccountType = () => {
+        const { post } = this.props
+
+        axios.get(`${URL}/fetch_accounts?account_id=${post.author_id}`)
+            .then((databaseResponse) => {
+
+                const accountType = databaseResponse.data[0].account_type
+
+                this.addName(post.author_id, accountType)
 
             })
 
@@ -165,12 +211,12 @@ class Post extends Component {
         this.fetchComments()
         this.fetchPostLikes()
         this.fetchPostViews()
-        this.addName(this.props.post.author_id)
+        this.fetchPostAuthorAccountType()
         this.postPostView()
     }
 
     render() {
-        const { post } = this.props
+        const { post, adminActive } = this.props
         const { comments, names, postLikes, postLiked, postViews, addingComment, showComments } = this.state
 
         return (
@@ -219,6 +265,7 @@ class Post extends Component {
 
                         {addingComment &&
                             <NewComment
+                                adminActive={adminActive}
                                 postId={post.post_id}
                                 doneAddingComment={() => { this.setState({ addingComment: false }); this.fetchComments() }}
                                 cancelNewComment={() => this.setState({ addingComment: false })} />
