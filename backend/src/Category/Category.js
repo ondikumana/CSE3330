@@ -43,8 +43,8 @@ module.exports = function (app, sql) {
   
       //adding data to database
       try {
-        const result = await sql.query`insert into category (category_description) values (${category.category_description})`
-        res.status(200).send(result)
+        const result = await sql.query`insert into category (category_description) values (${category.category_description}); select scope_identity() as category_id`
+        res.status(200).send(result.recordset)
         return
       }
       catch (err) {

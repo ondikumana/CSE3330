@@ -1,11 +1,13 @@
 import React, { Component } from 'react'
-import { Container, Segment, Comment, Button } from 'semantic-ui-react'
-import { Redirect } from 'react-router-dom'
+import { Container, Segment, Label, Button } from 'semantic-ui-react'
+import { Redirect, Link } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
 import Post from '../Home//Post'
 import NewPost from '../Home/NewPost'
 import SearchBar from '../Home/SearchBar';
+import { HomeContext } from '../Home/HomeProvider'
+import Member from './Member'
 
 const postContainer = {
     marginTop: '20px',
@@ -33,8 +35,10 @@ class Page extends Component {
         logOut: false,
         addingPost: false,
         goingBackToMe: false,
-        adminActive: false,
-        isSignedInUserAdmin: false
+        // adminActive: false,
+        isSignedInUserAdmin: false,
+        members: null,
+        isMember: false
     }
 
     fetchPosts = () => {
@@ -54,7 +58,12 @@ class Page extends Component {
         axios.get(`${URL}/fetch_pages?page_id=${page_id}`)
             .then((databaseResponse) => {
                 this.setState({ page: databaseResponse.data[0] },
-                    () => { this.fetchPosts(); this.fetchCategory(databaseResponse.data[0].category) })
+                    () => {
+                        this.fetchPosts()
+                        this.fetchCategory(databaseResponse.data[0].category)
+                        this.fetchAdmins(page_id)
+                        this.fetchMembers(page_id)
+                    })
             })
 
             .catch(e => console.log(e))
@@ -63,6 +72,56 @@ class Page extends Component {
     fetchCategory = (category_id) => {
         axios.get(`${URL}/fetch_categories?category_id=${category_id}`)
             .then((databaseResponse) => this.setState({ category: databaseResponse.data[0].category_description }))
+
+            .catch(e => console.log(e))
+    }
+
+    changeMembership = () => {
+        const { signedInUser, isMember, page } = this.state
+
+        if (isMember) {
+            axios.post(`${URL}/remove_member`, {
+                page_id: page.page_id,
+                profile_id: signedInUser.profile_id
+            })
+                .then(() => {
+                    console.log('removed member')
+                    this.fetchMembers(page.page_id)
+                })
+                .catch((error) => console.log(error))
+        }
+        else {
+            axios.post(`${URL}/create_member`, {
+                page_id: page.page_id,
+                profile_id: signedInUser.profile_id
+            })
+                .then(() => {
+                    console.log('became member')
+                    this.fetchMembers(page.page_id)
+                })
+                .catch((error) => console.log(error))
+        }
+    }
+
+    fetchMembers = (page_id) => {
+        const { signedInUser } = this.state
+        this.setState({ isMember: false })
+
+        axios.get(`${URL}/fetch_members?page_id=${page_id}`)
+            .then((databaseResponse) => {
+
+                const members = databaseResponse.data
+                console.log(members)
+
+                for (let i = 0; i < members.length; i++) {
+                    if (members[i].profile_id == signedInUser.profile_id) {
+                        this.setState({ isMember: true })
+                    }
+                }
+
+                this.setState({ members: members })
+
+            })
 
             .catch(e => console.log(e))
     }
@@ -91,17 +150,16 @@ class Page extends Component {
             .catch(e => console.log(e))
     }
 
-    toggleAdminActive = () => {
-        const { page, adminActive } = this.state
+    deleteAccount = (page) => {
 
-        if (adminActive) {
-            localStorage.removeItem('adminActivePage')
-            this.setState({ adminActive: false })
-        }
-        else {
-            localStorage.setItem('adminActivePage', JSON.stringify(page))
-            this.setState({ adminActive: true })
-        }
+        axios.post(`${URL}/remove_account`, {
+            account_id: page.account_id,
+        })
+            .then(() => {
+                console.log('deleted')
+                this.setState({ goingBackToMe: true })
+            })
+            .catch((error) => console.log(error))
     }
 
     componentDidMount = () => {
@@ -119,7 +177,6 @@ class Page extends Component {
                     if (queryArr[i].includes('page_id')) {
                         const pageIdArr = queryArr[i].split('=')
                         this.fetchPage(pageIdArr[1])
-                        this.fetchAdmins(pageIdArr[1])
                         break
                     }
                 }
@@ -127,73 +184,98 @@ class Page extends Component {
 
     }
 
-    componentWillUnmount = () => {
-        localStorage.removeItem('adminActivePage')
-    }
-
     render() {
 
-        const { page, category, posts, admins, logOut, addingPost, goingBackToMe, adminActive, isSignedInUserAdmin } = this.state
+        const { page, category, posts, admins, addingPost, goingBackToMe, adminActive, isSignedInUserAdmin, members, isMember } = this.state
 
-        if (!JSON.parse(localStorage.getItem('signedInUser')) || logOut) {
+        if (!JSON.parse(localStorage.getItem('signedInUser'))) {
             return <Redirect push to="/login" />
         }
 
         if (goingBackToMe) {
-            return <Redirect push to="/home" />
+            return <Redirect push to="/me" />
         }
 
         return (
-            <Container>
-                <h1> Page </h1>
+            <HomeContext.Consumer>
+                {(value) => {
 
-                <SearchBar fromPage={true} fetchPage={(page_id) => this.fetchPage(page_id)} />
+                    const { adminActive, adminActivePage, toggleAdminActive, signedInUser } = value
 
-                <h3>Page Info</h3>
-                <Container style={container}>
-                    {page &&
-                        <Segment compact>
-                            <div> <b>Page ID: </b> {page.page_id} </div>
-                            <div> <b>Page Name: </b> {page.page_name} </div>
-                            {category && <div> <b>Category: </b> {category} </div>}
-                            <div> <b>Description: </b> {page.description} </div>
-                        </Segment>
-                    }
-                </Container>
+                    return (
+                        <Container>
+                            <h1> Page </h1>
 
-                <h3>Posts</h3>
-                <Container style={container}>
-                    {posts && posts.length > 0 &&
-                        posts.map((post) => {
-                            return (
-                                <Container key={post.post_id} style={postContainer}>
-                                    <Post post={post} adminActive={adminActive} />
-                                </Container>
-                            )
-                        })
-                    }
-                    {addingPost &&
-                        <NewPost
-                            adminActive={adminActive}
-                            destinationId={page.account_id}
-                            style={postContainer}
-                            doneAddingPost={() => { this.setState({ addingPost: false }); this.fetchPosts() }}
-                            cancelNewPost={() => this.setState({ addingPost: false })} />
-                    }
-                    {page && <Button compact onClick={() => this.setState({ addingPost: true })}> Create Post on This Page </Button>}
-                </Container>
+                            <SearchBar fromPage={true} fetchPage={(page_id) => this.fetchPage(page_id)} />
 
-                {isSignedInUserAdmin &&
-                    <div>
-                        <Button style={newPostButtonStyle} compact onClick={this.toggleAdminActive}> {adminActive ? 'Stop Being Active Admin' : 'Be Active Admin'} </Button>
-                    </div>
-                }
+                            <h3>Page Info</h3>
+                            <Container style={container}>
+                                {page &&
+                                    <Segment compact>
+                                        <div> <b>Page ID: </b> {page.page_id} </div>
+                                        <div> <b>Page Name: </b> {page.page_name} </div>
+                                        {category && <div> <b>Category: </b> {category} </div>}
+                                        <div> <b>Description: </b> {page.description} </div>
+                                    </Segment>
+                                }
+                                {page && !(adminActive && adminActivePage.account_id == page.account_id) && <Label as={Link} to={`/messages?recipient_id=${page.account_id}`} >Send Message</Label>}
+                                {page && (adminActive && adminActivePage.account_id == page.account_id) && <Label as={Link} to={`/messages`} >Messages</Label>}
+                            </Container>
 
-                <Button style={newPostButtonStyle} compact onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Button>
+                            <h3>Page Members</h3>
+                            <Container style={container}>
+                                {members &&
+                                    members.map((member) => {
+                                        return (
+                                            <Member
+                                                key={member.profile_id}
+                                                profileId={member.profile_id}
+                                                pageId={page.page_id}
+                                                isSignedInUserAdmin={isSignedInUserAdmin} />
+                                        )
+                                    })
+                                }
+                                {members &&
+                                    <Button style={newPostButtonStyle} compact onClick={this.changeMembership}> {isMember ? 'Leave Page' : 'Join Page' } </Button>
+                                }
+                            </Container>
 
 
+                            <h3>Posts</h3>
+                            <Container style={container}>
+                                {posts && posts.length > 0 &&
+                                    posts.map((post) => {
+                                        return (
+                                            <Container key={post.post_id} style={postContainer}>
+                                                <Post post={post} adminActive={adminActive} />
+                                            </Container>
+                                        )
+                                    })
+                                }
+                                {addingPost &&
+                                    <NewPost
+                                        destinationId={page.account_id}
+                                        style={postContainer}
+                                        doneAddingPost={() => { this.setState({ addingPost: false }); this.fetchPosts() }}
+                                        cancelNewPost={() => this.setState({ addingPost: false })} />
+                                }
+                                {page && <Button compact onClick={() => this.setState({ addingPost: true })}> Create Post on This Page </Button>}
+                            </Container>
 
-            </Container>
+                            {isSignedInUserAdmin &&
+                                <div>
+                                    <Button style={newPostButtonStyle} compact onClick={() => toggleAdminActive(page)}> {adminActive ? 'Stop Being Active Admin' : 'Be Active Admin'} </Button>
+                                    <br />
+                                    <Button style={newPostButtonStyle} compact onClick={() => this.deleteAccount(page)}> Delete This Page </Button>
+                                </div>
+                            }
+
+                            <Button style={newPostButtonStyle} compact onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Button>
+
+                        </Container>
+                    )
+                }}
+            </HomeContext.Consumer>
         )
     }
 }

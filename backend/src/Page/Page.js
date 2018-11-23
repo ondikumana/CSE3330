@@ -41,7 +41,6 @@ module.exports = function(app, sql) {
     }
 
     const page = {
-      page_id: parseInt(req.body.page_id),
       page_name: req.body.page_name,
       logo_url: req.body.logo_url,
       header_image_url: req.body.header_image_url,
@@ -51,10 +50,6 @@ module.exports = function(app, sql) {
     }
 
     //body validation
-    if (!page.page_id) {
-      res.status(404).send("missing page_id. Make sure it's an int")
-      return
-    }
     if (!page.page_name) {
       res.status(404).send("missing page_name")
       return
@@ -90,8 +85,8 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into page (page_id, page_name, logo_url, header_image_url, description, category, account_id) values (${page.page_id}, ${page.page_name}, ${page.logo_url}, ${page.header_image_url}, ${page.description}, ${page.category}, ${page.account_id})`
-      res.status(200).send(result)
+      const result = await sql.query`insert into page (page_name, logo_url, header_image_url, description, category, account_id) values (${page.page_name}, ${page.logo_url}, ${page.header_image_url}, ${page.description}, ${page.category}, ${page.account_id}); select scope_identity() as page_id`
+      res.status(200).send(result.recordset)
       return
     }
     catch (err) {

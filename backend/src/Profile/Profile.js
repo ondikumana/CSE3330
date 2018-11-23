@@ -46,7 +46,6 @@ module.exports = function(app, sql) {
     }
 
     const profile = {
-      profile_id: parseInt(req.body.profile_id),
       fname: req.body.fname,
       lname: req.body.lname,
       phone: req.body.phone,
@@ -57,10 +56,6 @@ module.exports = function(app, sql) {
     }
 
     //body validation
-    if (!profile.profile_id) {
-      res.status(404).send("missing profile_id. Make sure it's an int")
-      return
-    }
     if (!profile.fname) {
       res.status(404).send("missing fname")
       return
@@ -96,8 +91,8 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into profile (profile_id, fname, lname, phone, email, username, password, account_id) values (${profile.profile_id}, ${profile.fname}, ${profile.lname}, ${profile.phone}, ${profile.email}, ${profile.username}, ${profile.password}, ${profile.account_id})`
-      res.status(200).send(result)
+      const result = await sql.query`insert into profile (fname, lname, phone, email, username, password, account_id) values (${profile.fname}, ${profile.lname}, ${profile.phone}, ${profile.email}, ${profile.username}, ${profile.password}, ${profile.account_id}); select scope_identity() as profile_id`
+      res.status(200).send(result.recordset)
       return
     }
     catch (err) {

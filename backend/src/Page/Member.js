@@ -44,26 +44,47 @@ module.exports = function(app, sql) {
       res.status(404).send("missing profile_id")
       return
     }
-    if (!member.join_date) {
-      res.status(404).send("missing join_date")
+
+    //adding data to database
+    try {
+      const result = await sql.query`insert into member (page_id, profile_id, join_date) values (${member.page_id}, ${member.profile_id}, DEFAULT)`
+      res.status(200).send(result)
+      return
+    }
+    catch (err) {
+      console.log(err.originalError.info.message)
+      res.status(404).send(err.originalError.info.message)
       return
     }
 
-    //creation date validation
-    const joinDateArr = member.join_date.split("-")
+  })
 
-    if (joinDateArr.length != 3) {
-      res.status(404).send("invalid date")
+  app.post('/remove_member', async (req, res) =>  {
+    // creates a member given an object of info in the body
+
+    if (!req.body) {
+      res.status(404).send("missing body")
       return
     }
-    if (joinDateArr[0].length != 4 || joinDateArr[1].length != 2){
-      res.status(404).send("invalid date")
+
+    const member = {
+      page_id: parseInt(req.body.page_id),
+      profile_id: req.body.profile_id,
+    }
+
+    //body validation
+    if (!member.page_id) {
+      res.status(404).send("missing page_id. Make sure it's an int")
+      return
+    }
+    if (!member.profile_id) {
+      res.status(404).send("missing profile_id")
       return
     }
 
     //adding data to database
     try {
-      const result = await sql.query`insert into member (page_id, profile_id, join_date) values (${member.page_id}, ${member.profile_id}, ${member.join_date})`
+      const result = await sql.query`delete from member where page_id = ${member.page_id} and profile_id = ${member.profile_id}`
       res.status(200).send(result)
       return
     }

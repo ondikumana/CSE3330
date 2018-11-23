@@ -1,19 +1,23 @@
 import React from "react"
 import { Route, BrowserRouter, Switch } from 'react-router-dom'
 import Login from './components/Login/Login'
-import Home from './components/Home/Home'
+import Me from './components/Home/Me'
 import Profile from "./components/Profile/Profile"
 import Page from "./components/Page/Page"
+import HomeProvider from "./components/Home/HomeProvider"
+import Messages from "./components/Messages/Messages"
 
 const Layout = () =>
-
     <BrowserRouter>
         <Switch>
             <Route path='/' exact component={Login} />
             <Route path='/login' exact component={Login} />
-            <Route path='/home' exact component={Home} />
-            <Route path='/profile' exact component={Profile} />
-            <Route path='/page' exact component={Page} />
+            <HomeProvider>
+                <Route path='/me' exact component={Me} />
+                <Route path='/profile' exact component={Profile} />
+                <Route path='/page' exact component={Page} />
+                <Route path='/messages' exact component={Messages} />
+            </HomeProvider>
             {/* <Route path='/family' exact component={FamilyPage} />
             <Route path='/dashboard' component={Dashboard} />
             <Route path='/events' exact component={Events} />

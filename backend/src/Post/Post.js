@@ -64,8 +64,8 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into post (time, author_id, destination_id, body, attachment_url) VALUES(DEFAULT, ${post.author_id}, ${post.destination_id}, ${post.body}, ${post.attachment_url})`
-      res.status(200).send(result)
+      const result = await sql.query`insert into post (time, author_id, destination_id, body, attachment_url) VALUES(DEFAULT, ${post.author_id}, ${post.destination_id}, ${post.body}, ${post.attachment_url}); select scope_identity() as post_id`
+      res.status(200).send(result.recordset)
       return
     }
     catch (err) {

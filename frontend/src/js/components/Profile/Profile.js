@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { Container, Segment, Comment, Button } from 'semantic-ui-react'
-import { Redirect } from 'react-router-dom'
+import { Container, Segment, Comment, Button, Label } from 'semantic-ui-react'
+import { Redirect, Link } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
 import Post from '../Home//Post'
@@ -85,7 +85,7 @@ class Profile extends Component {
         }
 
         if (goingBackToMe) {
-            return <Redirect push to="/home" />
+            return <Redirect push to="/me" />
         }
 
         return (
@@ -107,6 +107,7 @@ class Profile extends Component {
                             <div> <b>Account ID: </b> {profile.account_id} </div>
                         </Segment>
                     }
+                    {profile && <Label as={Link} to={`/messages?recipient_id=${profile.account_id}`} >Send Message</Label>}
                 </Container>
 
                 <h3>Posts</h3>

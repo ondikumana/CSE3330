@@ -51,8 +51,7 @@ export default class LoginPage extends Component {
     axios.get(`${URL}/fetch_profiles?username=${this.state.username}`)
       .then((databaseResponse) => {
 
-        let passwordFromDatabase = databaseResponse.data[0].password
-        if (this.state.password == passwordFromDatabase) {
+        if (databaseResponse.data.length > 0 && this.state.password == databaseResponse.data[0].password) {
           localStorage.setItem('signedInUser', JSON.stringify(databaseResponse.data[0]))
           this.setState({
             authenticationSuccess: true,
@@ -62,7 +61,7 @@ export default class LoginPage extends Component {
         else {
           this.setState({
             authenticationFail: true,
-            authenticationFailMessage: 'Invalid Password',
+            authenticationFailMessage: 'Invalid Password or Account',
             loading: false
           })
         }
@@ -75,7 +74,7 @@ export default class LoginPage extends Component {
 
   render() {
     if (this.state.authenticationSuccess || localStorage.getItem('signedInUser')) {
-      return <Redirect push to="/home" />
+      return <Redirect push to="/me" />
     }
 
     return (

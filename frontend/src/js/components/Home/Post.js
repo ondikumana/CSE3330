@@ -1,9 +1,11 @@
 import React, { Component } from 'react'
 import { Container, Segment, Comment, Icon, Button } from 'semantic-ui-react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
 import PostComment from './PostComment'
 import NewComment from './NewComment'
+import { HomeContext } from './HomeProvider';
 
 const commentContainerStyle = {
     paddingLeft: '50px',
@@ -27,7 +29,8 @@ class Post extends Component {
         addingComment: false,
         showComments: false,
         postLiked: false,
-        accountType: null
+        authorAccountType: null,
+        authorAccountId: null
     }
 
     fetchComments = () => {
@@ -53,7 +56,7 @@ class Post extends Component {
                         })
 
                         .catch(e => console.log(e))
-                    
+
                 }
 
                 this.setState({
@@ -152,6 +155,8 @@ class Post extends Component {
 
                 const accountType = databaseResponse.data[0].account_type
 
+                this.setState({ authorAccountType: accountType }, () => this.fetchAccountTypeId())
+
                 this.addName(post.author_id, accountType)
 
             })
@@ -207,6 +212,28 @@ class Post extends Component {
 
     }
 
+    fetchAccountTypeId = () => {
+        const { authorAccountType } = this.state
+        const { post } = this.props
+
+        if (authorAccountType == 'profile') {
+            axios.get(`${URL}/fetch_profiles?account_id=${post.author_id}`)
+                .then((databaseResponse) => {
+                    this.setState({ authorAccountId: databaseResponse.data[0].profile_id })
+                })
+
+                .catch(e => console.log(e))
+        }
+        else {
+            axios.get(`${URL}/fetch_pages?account_id=${post.author_id}`)
+                .then((databaseResponse) => {
+                    this.setState({ authorAccountId: databaseResponse.data[0].page_id })
+                })
+
+                .catch(e => console.log(e))
+        }
+    }
+
     componentDidMount = () => {
         this.fetchComments()
         this.fetchPostLikes()
@@ -217,65 +244,79 @@ class Post extends Component {
 
     render() {
         const { post, adminActive } = this.props
-        const { comments, names, postLikes, postLiked, postViews, addingComment, showComments } = this.state
+        const { comments, names, postLikes, postLiked, postViews, addingComment, showComments, authorAccountType, authorAccountId } = this.state
 
         return (
-            <Container>
-                <Segment compact>
-                    {names && names[post.author_id] &&
-                        <Comment.Group>
-                            <Comment>
-                                <Comment.Avatar src={`https://ui-avatars.com/api/?name=${names[post.author_id]}`} />
-                                <Comment.Content>
-                                    <Comment.Author as='a' >{names[post.author_id]}</Comment.Author>
-                                    <Comment.Metadata>
-                                        <div>{post.time}</div>
-                                        {postLikes &&
-                                            <div>
-                                                <Icon name='thumbs up' />
-                                                {postLikes.length}
-                                            </div>
-                                        }
-                                        {postViews &&
-                                            <div>
-                                                <Icon name='eye' />
-                                                {postViews.length}
-                                            </div>
-                                        }
-                                    </Comment.Metadata>
-                                    <Comment.Text>{post.body}</Comment.Text>
-                                    <Comment.Actions>
-                                        <Comment.Action onClick={this.postPostLike} >{postLiked ? 'Remove Like' : 'Like'}</Comment.Action>
-                                        <Comment.Action onClick={() => this.setState({ showComments: !showComments })}>{showComments ? 'Hide' : 'Show'} Comments</Comment.Action>
-                                    </Comment.Actions>
-                                </Comment.Content>
-                            </Comment>
-                        </Comment.Group>
-                    }
-                </Segment>
-                {showComments && comments && comments[post.post_id] &&
-                    <Container style={commentContainerStyle} >
-                        <Comment.Group style={commentGroupStyle} >
-                            {comments[post.post_id].map((comment) => {
-                                return (
-                                    <PostComment key={comment.comment_id} comment={comment} names={names} />
-                                )
-                            })}
-                        </Comment.Group>
+            <HomeContext.Consumer>
+                {(value) => {
+                    const { signedInUser } = value
 
-                        {addingComment &&
-                            <NewComment
-                                adminActive={adminActive}
-                                postId={post.post_id}
-                                doneAddingComment={() => { this.setState({ addingComment: false }); this.fetchComments() }}
-                                cancelNewComment={() => this.setState({ addingComment: false })} />
-                        }
+                    return (
+                        <Container>
+                            <Segment compact>
+                                {signedInUser && authorAccountId && names && names[post.author_id] &&
+                                    <Comment.Group>
+                                        <Comment>
+                                            <Comment.Avatar src={`https://ui-avatars.com/api/?name=${names[post.author_id]}`} />
+                                            <Comment.Content>
+                                                {signedInUser.account_id == post.author_id && authorAccountType == 'profile' ?
+                                                     <Comment.Author as={Link} to={`/me`} >{names[post.author_id]}</Comment.Author>
+                                                     :
+                                                     <Comment.Author as={Link} to={authorAccountType == 'profile' ? `/profile?profile_id=${authorAccountId}` : `/page?page_id=${authorAccountId}`} >{names[post.author_id]}</Comment.Author>
+                                                }
+                                                <Comment.Metadata>
+                                                    <div>{post.time}</div>
+                                                    {postLikes &&
+                                                        <div>
+                                                            <Icon name='thumbs up' />
+                                                            {postLikes.length}
+                                                        </div>
+                                                    }
+                                                    {postViews &&
+                                                        <div>
+                                                            <Icon name='eye' />
+                                                            {postViews.length}
+                                                        </div>
+                                                    }
+                                                </Comment.Metadata>
+                                                <Comment.Text>{post.body}</Comment.Text>
+                                                <Comment.Actions>
+                                                    <Comment.Action onClick={this.postPostLike} >{postLiked ? 'Remove Like' : 'Like'}</Comment.Action>
+                                                    <Comment.Action onClick={() => this.setState({ showComments: !showComments })}>{showComments ? 'Hide' : 'Show'} Comments</Comment.Action>
+                                                </Comment.Actions>
+                                            </Comment.Content>
+                                        </Comment>
+                                    </Comment.Group>
+                                }
+                            </Segment>
+                            {showComments && comments && comments[post.post_id] &&
+                                <Container style={commentContainerStyle} >
+                                    <Comment.Group style={commentGroupStyle} >
+                                        {comments[post.post_id].map((comment) => {
+                                            return (
+                                                <PostComment key={comment.comment_id} comment={comment} names={names} />
+                                            )
+                                        })}
+                                    </Comment.Group>
 
-                        <Button compact onClick={() => this.setState({ addingComment: true })}>New Comment</Button>
-                    </Container>
-                }
+                                    {addingComment &&
+                                        <NewComment
+                                            adminActive={adminActive}
+                                            postId={post.post_id}
+                                            doneAddingComment={() => { this.setState({ addingComment: false }); this.fetchComments() }}
+                                            cancelNewComment={() => this.setState({ addingComment: false })} />
+                                    }
 
-            </Container>
+                                    <Button compact onClick={() => this.setState({ addingComment: true })}>New Comment</Button>
+                                </Container>
+                            }
+
+                        </Container>
+                    )
+                }}
+            </HomeContext.Consumer>
+
+
         )
     }
 }

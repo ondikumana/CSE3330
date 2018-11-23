@@ -2,12 +2,18 @@ import React, { Component } from 'react'
 import { Segment, Comment, Icon } from 'semantic-ui-react'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
+import { HomeContext } from './HomeProvider'
+import { Link } from 'react-router-dom'
+
 
 class PostComment extends Component {
 
     state = {
         commentLikes: null,
-        commentLiked: false
+        commentLiked: false,
+        authorAccountType: 'profile',
+        authorAccountType: null
+
     }
 
     postCommentLike = () => {
@@ -67,37 +73,86 @@ class PostComment extends Component {
             .catch(e => console.log(e))
     }
 
+    fetchPostAuthorAccountType = () => {
+        const { comment } = this.props
+
+        axios.get(`${URL}/fetch_accounts?account_id=${comment.author_id}`)
+            .then((databaseResponse) => {
+
+                const accountType = databaseResponse.data[0].account_type
+
+                this.setState({ authorAccountType: accountType }, () => this.fetchAccountTypeId())
+
+            })
+
+            .catch(e => console.log(e))
+    }
+
+    fetchAccountTypeId = () => {
+        const { authorAccountType } = this.state
+        const { comment } = this.props
+
+        if (authorAccountType == 'profile') {
+            axios.get(`${URL}/fetch_profiles?account_id=${comment.author_id}`)
+                .then((databaseResponse) => {
+                    this.setState({ authorAccountId: databaseResponse.data[0].profile_id })
+                })
+
+                .catch(e => console.log(e))
+        }
+        else {
+            axios.get(`${URL}/fetch_pages?account_id=${comment.author_id}`)
+                .then((databaseResponse) => {
+                    this.setState({ authorAccountId: databaseResponse.data[0].page_id })
+                })
+
+                .catch(e => console.log(e))
+        }
+    }
+
     componentDidMount = () => {
         this.fetchCommentLikes()
+        this.fetchPostAuthorAccountType()
     }
 
     render() {
         const { comment, names } = this.props
-        const { commentLikes, commentLiked } = this.state
+        const { commentLikes, commentLiked, authorAccountType, authorAccountId } = this.state
 
         if (comment && names) {
             return (
-                <Comment key={comment.comment_id} >
-                    <Comment.Avatar src={`https://ui-avatars.com/api/?name=${names[comment.author_id]}`} />
-                    <Comment.Content>
-                        <Comment.Author as='a'>{names[comment.author_id]}</Comment.Author>
-                        <Comment.Metadata>
-                            <span>{comment.time}</span>
-                            {commentLikes &&
-                                <div>
-                                    <Icon name='thumbs up' />
-                                    {commentLikes.length}
-                                </div>
-                            }
-                        </Comment.Metadata>
-                        <Comment.Text>{comment.body}</Comment.Text>
-                        <Comment.Actions>
-                            <Comment.Action onClick={this.postCommentLike}>{commentLiked ? 'Remove Like' : 'Like'}</Comment.Action>
-                        </Comment.Actions>
+                <HomeContext.Consumer>
+                    {(value) => {
+                        const { signedInUser } = value
+                        return (
+                            <Comment key={comment.comment_id} >
+                                <Comment.Avatar src={`https://ui-avatars.com/api/?name=${names[comment.author_id]}`} />
+                                <Comment.Content>
+                                    {signedInUser.account_id == comment.author_id && authorAccountType == 'profile' ?
+                                        <Comment.Author as={Link} to={`/me`} >{names[comment.author_id]}</Comment.Author>
+                                        :
+                                        <Comment.Author as={Link} to={authorAccountType == 'profile' ? `/profile?profile_id=${authorAccountId}` : `/page?page_id=${authorAccountId}`} >{names[comment.author_id]}</Comment.Author>
+                                    }
+                                    <Comment.Metadata>
+                                        <span>{comment.time}</span>
+                                        {commentLikes &&
+                                            <div>
+                                                <Icon name='thumbs up' />
+                                                {commentLikes.length}
+                                            </div>
+                                        }
+                                    </Comment.Metadata>
+                                    <Comment.Text>{comment.body}</Comment.Text>
+                                    <Comment.Actions>
+                                        <Comment.Action onClick={this.postCommentLike}>{commentLiked ? 'Remove Like' : 'Like'}</Comment.Action>
+                                    </Comment.Actions>
 
-                    </Comment.Content>
+                                </Comment.Content>
 
-                </Comment>
+                            </Comment>
+                        )
+                    }}
+                </HomeContext.Consumer>
             )
         }
         else {

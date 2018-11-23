@@ -16,7 +16,7 @@ module.exports = function(app, sql) {
       let result
 
       if (recipient_id && sender_id){
-        result = await sql.query`select * from message where recipient_id = ${recipient_id} and sender_id = ${sender_id}`
+        result = await sql.query`select * from message where recipient_id = ${recipient_id} or sender_id = ${sender_id}`
       }
       else if (recipient_id && !sender_id) {
         result = await sql.query`select * from message where recipient_id = ${recipient_id}`
@@ -64,7 +64,7 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into message (recipient_id, sender_id, sent_time, sent, delivered, message_read, body) values (${message.recipient_id}, ${message.sender_id}, DEFAULT, 1, 0, 0, ${message.body})`
+      const result = await sql.query`insert into message (recipient_id, sender_id, sent_time, was_sent, was_delivered, was_read, body) values (${message.recipient_id}, ${message.sender_id}, DEFAULT, 1, 0, 0, ${message.body})`
       res.status(200).send(result)
       return
     }
