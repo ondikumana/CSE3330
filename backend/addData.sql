@@ -108,7 +108,7 @@ INSERT INTO Message (recipient_id, sender_id, sent_time, was_sent, was_delivered
 
 INSERT INTO Post (time, author_id, destination_id, body) VALUES(DEFAULT, 1, 1, 'We want to welcome Olateju as our leader and admin of this page.');
 
-INSERT INTO Post (time, author_id, destination_id, body) VALUES(DEFAULT, 5, 5, 'I am a teacher in the Computer Science and Engineering Department at UTA');
+INSERT INTO Post (time, author_id, destination_id, body) VALUES(DEFAULT, 4, 4, 'I am a teacher in the Computer Science and Engineering Department at UTA');
 
 INSERT INTO Post (time, author_id, destination_id, body) VALUES(DEFAULT, 8, 8, 'Above all, love each other deeply, because love covers over a multitude of sins." John 15:12: “My command is this: Love each other as I have loved you." 1 Corinthians 13:13: “And now these three remain: faith, hope and love. But the greatest of these is love');
 

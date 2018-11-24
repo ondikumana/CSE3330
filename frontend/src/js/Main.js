@@ -1,5 +1,5 @@
 import React from "react"
-import { Route, BrowserRouter, Switch } from 'react-router-dom'
+import { Route, BrowserRouter, Switch, HashRouter } from 'react-router-dom'
 import Login from './components/Login/Login'
 import Me from './components/Home/Me'
 import Profile from "./components/Profile/Profile"
@@ -10,7 +10,7 @@ import Register from "./components/Register/Register"
 import Admin from "./components/Admin/Admin"
 
 const Layout = () =>
-    <BrowserRouter>
+    <HashRouter>
         <Switch>
             <Route path='/' exact component={Login} />
             <Route path='/login' exact component={Login} />
@@ -23,6 +23,6 @@ const Layout = () =>
                 <Route path='/messages' exact component={Messages} />
             </HomeProvider>
         </Switch>
-    </BrowserRouter>
+    </HashRouter>
 
 export default Layout
