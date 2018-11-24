@@ -97,6 +97,62 @@ module.exports = function(app, sql) {
 
   })
 
+  app.post('/update_page', async (req, res) =>  {
+    // creates a profile given an object of info in the body. Info validation is to be done from frontend
+
+    if (!req.body) {
+      console.log('missing body')
+      res.status(404).send("missing body")
+      return
+    }
+
+    const page = {
+      page_id: req.body.page_id,
+      page_name: req.body.page_name,
+      logo_url: req.body.logo_url,
+      header_image_url: req.body.header_image_url,
+      description: req.body.description,
+      category: parseInt(req.body.category),
+    }
+
+    if (!page.page_id) {
+      console.log('missing page_id')
+      res.status(404).send("missing page_id")
+      return
+    }
+
+    //adding data to database
+    try {
+
+      let result
+
+      if (page.page_name) {
+        await sql.query`update page set page_name = ${page.page_name} where page_id = ${page.page_id}`
+      }
+      if (page.logo_url) {
+        await sql.query`update page set logo_url = ${page.logo_url} where page_id = ${page.page_id}`
+      }
+      if (page.header_image_url) {
+        await sql.query`update page set header_image_url = ${page.header_image_url} where page_id = ${page.page_id}`
+      }
+      if (page.description) {
+        await sql.query`update page set description = ${page.description} where page_id = ${page.page_id}`
+      }
+      if (page.category) {
+        await sql.query`update page set category = ${page.category} where page_id = ${page.page_id}`
+      }
+
+      res.status(200).send('done')
+      return
+    }
+    catch (err) {
+      console.log(err.originalError.info.message)
+      res.status(400).send(err.originalError.info.message)
+      return
+    }
+
+  })
+
 }
 
 async function fetchAccountType(account_id, sql) {

@@ -48,19 +48,10 @@ class Messages extends Component {
                 let senders = {}
 
                 for (let i = 0; i < messages.length; i++) {
-                    // if (adminActivePage && adminActivePage.account_id == messages[i].sender_id) {
-                    //     continue
-                    // }
-
-                    // if (signedInUser.account_id == messages[i].sender_id) {
-                    //     continue
-                    // }
-
                     senders[messages[i].sender_id] = true
                     senders[messages[i].recipient_id] = true
                 }
 
-                console.log(senders)
 
                 if (adminActivePage) {
                     delete senders[adminActivePage.account_id]
@@ -73,11 +64,15 @@ class Messages extends Component {
                     senders[activeSender] = true
                 }
 
-                console.log(messages)
+                const sendersArr = Object.keys(senders)
+
+                if (!activeSender) {
+                    this.setState({activeSender: sendersArr[0]})
+                }
 
                 this.setState({
                     messages: messages,
-                    senders: Object.keys(senders)
+                    senders: sendersArr
                 }, () => this.getConvoMessages())
 
             })

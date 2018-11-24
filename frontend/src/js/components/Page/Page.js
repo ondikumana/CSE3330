@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Container, Segment, Label, Button, Card, Image } from 'semantic-ui-react'
+import { Container, Segment, Label, Button, Card, Image, Input, Form, TextArea } from 'semantic-ui-react'
 import { Redirect, Link } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
@@ -72,7 +72,45 @@ class Page extends Component {
         members: null,
         isMember: false,
         deletingAccount: false,
-        showMembers: false
+        showMembers: false,
+        editMode: false,
+        newName: '',
+        newDescription: ''
+    }
+
+    handleInputChange = (e) => {
+        this.setState({
+            [e.target.name]: e.target.value
+        })
+    }
+
+    updatePage = () => {
+        const { page, newName, newDescription, editMode } = this.state
+        console.log(page.page_id)
+
+        if (!editMode) {
+            this.setState({ editMode: true })
+            return
+        }
+
+        if (page.page_name == newName && page.description == newDescription) {
+            this.setState({ editMode: false })
+            return
+        }
+
+        axios.post(`${URL}/update_page`, {
+            page_id: page.page_id,
+            page_name: page.page_name == newName ? null : newName,
+            description: page.description == newDescription ? null : newDescription,
+        })
+            .then((databaseResponse) => {
+
+                console.log('page updated')
+                this.setState({ editMode: false })
+                this.fetchPage(page.page_id)
+
+            })
+            .catch((error) => console.log(error))
     }
 
     fetchPosts = () => {
@@ -91,7 +129,11 @@ class Page extends Component {
         this.fetchAdmins()
         axios.get(`${URL}/fetch_pages?page_id=${page_id}`)
             .then((databaseResponse) => {
-                this.setState({ page: databaseResponse.data[0] },
+                this.setState({ 
+                    page: databaseResponse.data[0], 
+                    newName: databaseResponse.data[0].page_name,
+                    newDescription: databaseResponse.data[0].description
+                 },
                     () => {
                         this.fetchPosts()
                         this.fetchCategory(databaseResponse.data[0].category)
@@ -145,7 +187,6 @@ class Page extends Component {
             .then((databaseResponse) => {
 
                 const members = databaseResponse.data
-                console.log(members)
 
                 for (let i = 0; i < members.length; i++) {
                     if (members[i].profile_id == signedInUser.profile_id) {
@@ -228,7 +269,22 @@ class Page extends Component {
 
     render() {
 
-        const { page, category, posts, admins, addingPost, goingBackToMe, adminActive, isSignedInUserAdmin, members, isMember, deletingAccount, showMembers } = this.state
+        const {
+            page,
+            category,
+            posts,
+            admins,
+            addingPost,
+            goingBackToMe,
+            adminActive,
+            isSignedInUserAdmin,
+            members,
+            isMember,
+            deletingAccount,
+            showMembers,
+            editMode,
+            newName,
+            newDescription } = this.state
 
         if (!JSON.parse(localStorage.getItem('signedInUser'))) {
             return <Redirect push to="/login" />
@@ -254,14 +310,42 @@ class Page extends Component {
                                         <Card raised color={'blue'} style={cardStyle}>
                                             <Image src={`https://ui-avatars.com/api/?size=512&name=${page.page_name}`} />
                                             <Card.Content>
-                                                <Card.Header>{page.page_name}</Card.Header>
+                                                {editMode ?
+                                                    <Card.Header>
+
+                                                        <Input
+                                                            name={'newName'}
+                                                            type={'text'}
+                                                            value={newName}
+                                                            onChange={this.handleInputChange} />
+
+                                                    </Card.Header>
+                                                    :
+                                                    <Card.Header>{page.page_name}</Card.Header>
+                                                }
+
                                             </Card.Content>
                                         </Card>
 
                                         <Card raised color={'blue'} style={cardStyle}>
+                                            {isSignedInUserAdmin && adminActive && <Label style={newPostLabelStyle} attached={'top'} as={'a'} color={editMode ? 'green' : 'blue'} onClick={this.updatePage} >{editMode ? 'Update' : 'Edit'}</Label>}
                                             {category && <Card.Content> <div> {category} </div> </Card.Content>}
                                             <Card.Content>
-                                                <Card.Description>{page.description}</Card.Description>
+                                                {editMode ?
+                                                    <Card.Description>
+                                                        
+                                                        <Form>
+                                                            <TextArea
+                                                                autoHeight
+                                                                value={newDescription}
+                                                                name={'newDescription'}
+                                                                onChange={e => this.handleInputChange(e)} />
+                                                        </Form>
+
+                                                    </Card.Description>
+                                                    :
+                                                    <Card.Description>{page.description}</Card.Description>
+                                                }
                                             </Card.Content>
                                         </Card>
                                     </Container>

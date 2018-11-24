@@ -6,6 +6,7 @@ import URL from '../../../BackendUrl'
 import Post from '../Home//Post'
 import NewPost from '../Home/NewPost'
 import SearchBar from '../Home/SearchBar';
+import { HomeContext } from '../Home/HomeProvider';
 
 const postContainer = {
     marginTop: '20px',
@@ -116,77 +117,84 @@ class Profile extends Component {
         }
 
         return (
-            <Container>
-                {/* <h1> Profile </h1> */}
+            <HomeContext.Consumer>
+                {(value) => {
+                    const { adminActivePage } = value
+                    return (
+                        <Container>
+                            <Container style={container}>
+                                {profile &&
+                                    <Container style={cardContainerStyle}>
+                                        <Card raised color={'blue'} style={cardStyle}>
+                                            <Image src={`https://ui-avatars.com/api/?size=512&name=${profile.fname + ' ' + profile.lname}`} />
+                                            <Card.Content>
+                                                <Card.Header>{profile.fname} {profile.lname}</Card.Header>
+                                            </Card.Content>
+                                        </Card>
 
-                <Container style={container}>
-                    {profile &&
-                        <Container style={cardContainerStyle}>
-                            <Card raised color={'blue'} style={cardStyle}>
-                                <Image src={`https://ui-avatars.com/api/?size=512&name=${profile.fname + ' ' + profile.lname}`} />
-                                <Card.Content>
-                                    <Card.Header>{profile.fname} {profile.lname}</Card.Header>
-                                </Card.Content>
-                            </Card>
+                                        <Card raised color={'blue'} style={cardStyle}>
+                                            <Card.Content>
+                                                <b>Profile ID: </b> {profile.profile_id}
+                                            </Card.Content>
+                                            <Card.Content>
+                                                <b>Account ID: </b> {profile.account_id}
+                                            </Card.Content>
+                                            <Card.Content>
+                                                <b>Phone: </b> {profile.phone}
+                                            </Card.Content>
+                                            <Card.Content>
+                                                <b>Email: </b> {profile.email}
+                                            </Card.Content>
+                                            <Card.Content>
+                                                <b>Username: </b> {profile.username}
+                                            </Card.Content>
+                                        </Card>
+                                    </Container>
+                                }
 
-                            <Card raised color={'blue'} style={cardStyle}>
-                                <Card.Content>
-                                    <b>Profile ID: </b> {profile.profile_id}
-                                </Card.Content>
-                                <Card.Content>
-                                    <b>Account ID: </b> {profile.account_id}
-                                </Card.Content>
-                                <Card.Content>
-                                    <b>Phone: </b> {profile.phone}
-                                </Card.Content>
-                                <Card.Content>
-                                    <b>Email: </b> {profile.email}
-                                </Card.Content>
-                                <Card.Content>
-                                    <b>Username: </b> {profile.username}
-                                </Card.Content>
-                            </Card>
-                        </Container>
-                    }
-
-                    <Container textAlign={'center'}>
-                        {profile && <Label size={'large'} color={'blue'} as={Link} to={`/messages?recipient_id=${profile.account_id}`} >Send Message</Label>}
-                        <Label size={'large'} color={'blue'} as={'a'} style={labelStyle} onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Label>
-                    </Container>
-
-                    <Container textAlign={'center'} style={searchBarContainer}>
-                        <label>Search Pages/Profiles</label>
-                        <SearchBar fromProfile={true} fetchProfile={(profile_id) => this.fetchProfile(profile_id)} />
-                    </Container>
-
-                </Container>
-
-                <Container style={container}>
-                    {/* <h3 style={postHeaderStyle} >Posts</h3> */}
-                    {posts && posts.length > 0 &&
-                        posts.map((post) => {
-                            return (
-                                <Container key={post.post_id} style={postContainer}>
-                                    <Post post={post} />
+                                <Container textAlign={'center'}>
+                                    {profile && <Label size={'large'} color={'blue'} as={Link} to={`/messages?recipient_id=${profile.account_id}`} >Send Message</Label>}
+                                    <Label size={'large'} color={'blue'} as={'a'} style={labelStyle} onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Label>
                                 </Container>
-                            )
-                        })
-                    }
-                    {addingPost &&
-                        <Container style={postContainer}>
-                            <NewPost
-                                destinationId={profile.account_id}
-                                doneAddingPost={() => { this.setState({ addingPost: false }); this.fetchPosts() }}
-                                cancelNewPost={() => this.setState({ addingPost: false })} />
+
+                                <Container textAlign={'center'} style={searchBarContainer}>
+                                    <label>Search Pages/Profiles</label>
+                                    <SearchBar fromProfile={true} fetchProfile={(profile_id) => this.fetchProfile(profile_id)} />
+                                </Container>
+
+                            </Container>
+
+                            <Container style={container}>
+                                {/* <h3 style={postHeaderStyle} >Posts</h3> */}
+                                {posts && posts.length > 0 &&
+                                    posts.map((post) => {
+                                        return (
+                                            <Container key={post.post_id} style={postContainer}>
+                                                <Post post={post} adminActivePage={adminActivePage} />
+                                            </Container>
+                                        )
+                                    })
+                                }
+                                {addingPost &&
+                                    <Container style={postContainer}>
+                                        <NewPost
+                                            destinationId={profile.account_id}
+                                            doneAddingPost={() => { this.setState({ addingPost: false }); this.fetchPosts() }}
+                                            cancelNewPost={() => this.setState({ addingPost: false })} />
+                                    </Container>
+
+                                }
+                                {posts && <div style={newPostLabelStyle}> <Label as={'a'} color={'blue'} size={'medium'} onClick={() => this.setState({ addingPost: true })}> Create Post on {profile.fname.endsWith('s') ? profile.fname + "'" : profile.fname + "'s"} Profile </Label> </div>}
+                            </Container>
+
+                            {/* <Button style={newPostButtonStyle} compact onClick={this.signOut}> Log Out </Button> */}
+
                         </Container>
+                    )
+                }}
+            </HomeContext.Consumer>
 
-                    }
-                    {posts && <div style={newPostLabelStyle}> <Label as={'a'} color={'blue'} size={'medium'} onClick={() => this.setState({ addingPost: true })}> Create Post on {profile.fname.endsWith('s') ? profile.fname + "'" : profile.fname + "'s"} Profile </Label> </div>}
-                </Container>
 
-                {/* <Button style={newPostButtonStyle} compact onClick={this.signOut}> Log Out </Button> */}
-
-            </Container>
         )
     }
 }

@@ -21,6 +21,13 @@ const buttonStyle = {
     marginTop: '0px'
 }
 
+const postStyle = {
+    display: 'block',
+    borderRadius: '20px 50px',
+    border: '2px solid #767777',
+    backgroundColor: 'rgba(255, 255, 255, .3)',
+}
+
 class Post extends Component {
     state = {
         comments: null,
@@ -108,7 +115,7 @@ class Post extends Component {
     }
 
     fetchPostLikes = () => {
-        const { post } = this.props
+        const { post, adminActivePage } = this.props
 
         axios.get(`${URL}/fetch_post_likes?post_id=${post.post_id}`)
             .then((databaseResponse) => {
@@ -119,7 +126,11 @@ class Post extends Component {
                 this.setState({ postLiked: false })
                 const signedInUser = JSON.parse(localStorage.getItem('signedInUser'))
                 for (let i = 0; i < postLikes.length; i++) {
-                    if (postLikes[i].liked_by_id == signedInUser.account_id) {
+                    if (adminActivePage && postLikes[i].liked_by_id == adminActivePage.account_id) {
+                        this.setState({ postLiked: true })
+                    }
+
+                    if (!adminActivePage && postLikes[i].liked_by_id == signedInUser.account_id) {
                         this.setState({ postLiked: true })
                     }
                 }
@@ -165,7 +176,7 @@ class Post extends Component {
             .catch(e => console.log(e))
     }
 
-    postPostLike = () => {
+    postPostLike = (adminActivePage) => {
         const { post } = this.props
         const { postLiked } = this.state
 
@@ -174,7 +185,7 @@ class Post extends Component {
         if (!postLiked) {
             axios.post(`${URL}/create_post_like`, {
                 post_id: post.post_id,
-                liked_by_id: signedInUser.account_id
+                liked_by_id: adminActivePage ? adminActivePage.account_id : signedInUser.account_id
             })
                 .then(() => {
                     console.log('liked')
@@ -186,7 +197,7 @@ class Post extends Component {
         else {
             axios.post(`${URL}/remove_post_like`, {
                 post_id: post.post_id,
-                liked_by_id: signedInUser.account_id
+                liked_by_id: adminActivePage ? adminActivePage.account_id : signedInUser.account_id
             })
                 .then(() => {
                     console.log('like removed')
@@ -197,13 +208,13 @@ class Post extends Component {
     }
 
     postPostView = () => {
-        const { post } = this.props
+        const { post, adminActivePage } = this.props
 
         const signedInUser = JSON.parse(localStorage.getItem('signedInUser'))
 
         axios.post(`${URL}/create_post_view`, {
             post_id: post.post_id,
-            viewed_by_id: signedInUser.account_id
+            viewed_by_id: adminActivePage ? adminActivePage.account_id : signedInUser.account_id
         })
             .then(() => {
                 console.log('viewed')
@@ -250,20 +261,20 @@ class Post extends Component {
         return (
             <HomeContext.Consumer>
                 {(value) => {
-                    const { signedInUser } = value
+                    const { signedInUser, adminActivePage } = value
 
                     return (
                         <Container>
-                            <Segment compact color={post.author_id == signedInUser.account_id ? 'blue' : 'teal'}>
+                            <Segment compact style={postStyle} color={post.author_id == signedInUser.account_id ? 'blue' : 'teal'}>
                                 {signedInUser && authorAccountId && names && names[post.author_id] &&
                                     <Comment.Group>
                                         <Comment>
                                             <Comment.Avatar src={`https://ui-avatars.com/api/?name=${names[post.author_id]}`} />
                                             <Comment.Content>
                                                 {signedInUser.account_id == post.author_id && authorAccountType == 'profile' ?
-                                                     <Comment.Author as={Link} to={`/me`} >{names[post.author_id]}</Comment.Author>
-                                                     :
-                                                     <Comment.Author as={Link} to={authorAccountType == 'profile' ? `/profile?profile_id=${authorAccountId}` : `/page?page_id=${authorAccountId}`} >{names[post.author_id]}</Comment.Author>
+                                                    <Comment.Author as={Link} to={`/me`} >{names[post.author_id]}</Comment.Author>
+                                                    :
+                                                    <Comment.Author as={Link} to={authorAccountType == 'profile' ? `/profile?profile_id=${authorAccountId}` : `/page?page_id=${authorAccountId}`} >{names[post.author_id]}</Comment.Author>
                                                 }
                                                 <Comment.Metadata>
                                                     <div>{post.time}</div>
@@ -282,7 +293,7 @@ class Post extends Component {
                                                 </Comment.Metadata>
                                                 <Comment.Text>{post.body}</Comment.Text>
                                                 <Comment.Actions>
-                                                    <Comment.Action onClick={this.postPostLike} >{postLiked ? 'Remove Like' : 'Like'}</Comment.Action>
+                                                    <Comment.Action onClick={() => this.postPostLike(adminActivePage)} >{postLiked ? 'Remove Like' : 'Like'}</Comment.Action>
                                                     <Comment.Action onClick={() => this.setState({ showComments: !showComments })}>{showComments ? 'Hide' : 'Show'} Comments</Comment.Action>
                                                 </Comment.Actions>
                                             </Comment.Content>

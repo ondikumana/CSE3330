@@ -189,12 +189,16 @@ class NewPage extends Component {
                             <Form.Field>
                                 <Button
                                     type={'button'}
+                                    compact
+                                    color={'green'}
                                     disabled={(name.length == 0 || description.length == 0)}
                                     onClick={() => this.createNewCategory(signedInUser)}>
                                     Create
                                 </Button>
                                 <Button
                                     type={'button'}
+                                    compact
+                                    color={'blue'}
                                     onClick={() => this.props.cancelNewPage(signedInUser)}>
                                     Cancel
                                 </Button>

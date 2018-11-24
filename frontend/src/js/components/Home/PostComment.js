@@ -16,7 +16,7 @@ class PostComment extends Component {
 
     }
 
-    postCommentLike = () => {
+    postCommentLike = (adminActivePage) => {
         const { comment } = this.props
         const { commentLiked } = this.state
 
@@ -25,7 +25,7 @@ class PostComment extends Component {
         if (!commentLiked) {
             axios.post(`${URL}/create_comment_like`, {
                 comment_id: comment.comment_id,
-                liked_by_id: signedInUser.account_id
+                liked_by_id: adminActivePage ? adminActivePage.account_id : signedInUser.account_id
             })
                 .then(() => {
                     console.log('liked')
@@ -37,7 +37,7 @@ class PostComment extends Component {
         else {
             axios.post(`${URL}/remove_comment_like`, {
                 comment_id: comment.comment_id,
-                liked_by_id: signedInUser.account_id
+                liked_by_id: adminActivePage ? adminActivePage.account_id : signedInUser.account_id
             })
                 .then(() => {
                     console.log('like removed')
@@ -123,7 +123,7 @@ class PostComment extends Component {
             return (
                 <HomeContext.Consumer>
                     {(value) => {
-                        const { signedInUser } = value
+                        const { signedInUser, adminActivePage } = value
                         return (
                             <Comment key={comment.comment_id} >
                                 <Comment.Avatar src={`https://ui-avatars.com/api/?name=${names[comment.author_id]}`} />
@@ -144,7 +144,7 @@ class PostComment extends Component {
                                     </Comment.Metadata>
                                     <Comment.Text>{comment.body}</Comment.Text>
                                     <Comment.Actions>
-                                        <Comment.Action onClick={this.postCommentLike}>{commentLiked ? 'Remove Like' : 'Like'}</Comment.Action>
+                                        <Comment.Action onClick={() => this.postCommentLike(adminActivePage)}>{commentLiked ? 'Remove Like' : 'Like'}</Comment.Action>
                                     </Comment.Actions>
 
                                 </Comment.Content>

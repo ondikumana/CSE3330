@@ -6,23 +6,22 @@ import Profile from "./components/Profile/Profile"
 import Page from "./components/Page/Page"
 import HomeProvider from "./components/Home/HomeProvider"
 import Messages from "./components/Messages/Messages"
+import Register from "./components/Register/Register"
+import Admin from "./components/Admin/Admin"
 
 const Layout = () =>
     <BrowserRouter>
         <Switch>
             <Route path='/' exact component={Login} />
             <Route path='/login' exact component={Login} />
+            <Route path='/register' exact component={Register} />
+            <Route path='/admin' exact component={Admin} />
             <HomeProvider>
                 <Route path='/me' exact component={Me} />
                 <Route path='/profile' exact component={Profile} />
                 <Route path='/page' exact component={Page} />
                 <Route path='/messages' exact component={Messages} />
             </HomeProvider>
-            {/* <Route path='/family' exact component={FamilyPage} />
-            <Route path='/dashboard' component={Dashboard} />
-            <Route path='/events' exact component={Events} />
-            <Route path='/resetpassword' exact component={ResetPassword} /> */}
-            {/* <Route component={PageNotFound} /> */}
         </Switch>
     </BrowserRouter>
 

@@ -6,13 +6,16 @@ module.exports = function(app, sql) {
 
     const post_id = req.query.post_id ? parseInt(req.query.post_id) : null
 
-    if (!post_id) {
-      res.status(404).send('specify post_id')
-      return
-    }
-
     try {
-      const result = await sql.query`select * from comment where post_id = ${post_id}`
+      let result
+
+      if (post_id) {
+        result = await sql.query`select * from comment where post_id = ${post_id}`
+      }
+      else {
+        result = await sql.query`select * from comment`
+      }
+
       res.status(200).send(result.recordset)
     }
     catch (err) {

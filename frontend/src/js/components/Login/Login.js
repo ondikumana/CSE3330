@@ -1,8 +1,21 @@
 import React, { Component } from 'react'
-import { Input, Container, Segment, Button, Message, Loader, Dimmer, Form } from 'semantic-ui-react'
-import { Redirect } from 'react-router-dom'
+import { Input, Container, Segment, Button, Message, Loader, Dimmer, Form, Label } from 'semantic-ui-react'
+import { Redirect, Link } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
+
+const container = {
+  width: '25%',
+  paddingTop: '280px'
+}
+
+const segmentStyle = {
+  display: 'block',
+  borderRadius: '20px 50px',
+  border: '2px solid #767777',
+  backgroundColor: 'rgba(255, 255, 255, .3)',
+}
+
 
 export default class LoginPage extends Component {
 
@@ -78,9 +91,9 @@ export default class LoginPage extends Component {
     }
 
     return (
-      <Container>
-        <h1> Login </h1>
-        <Segment floated='left' padded={'very'} color={'grey'}>
+      <Container style={container}>
+
+        <Segment style={segmentStyle} padded={'very'} color={'blue'} >
           <Dimmer.Dimmable blurring dimmed={this.state.loading}>
             {(this.state.authenticationFail) &&
               <Message negative>
@@ -88,11 +101,12 @@ export default class LoginPage extends Component {
                 <p>{this.state.authenticationFailMessage}</p>
               </Message>
             }
-            <Form>
+            <Form style={{ padding: '20px' }}>
               <Form.Field>
                 <Input
                   icon='mail'
                   label='Username'
+                  color={'blue'}
                   placeholder='abcdefg'
                   name='username'
                   onChange={e => this.handleChange(e)}
@@ -111,16 +125,19 @@ export default class LoginPage extends Component {
               </Form.Field>
               <Form.Field>
                 <Button
+                  color={'blue'}
                   floated='right'
                   compact
                   onClick={this.authenticate}>
                   Login
-      </Button>
+                </Button>
               </Form.Field>
             </Form>
 
           </Dimmer.Dimmable>
         </Segment>
+        <Label as={Link} to={`/register`} size={'medium'} color={'grey'} >Sign Up</Label>
+        <Label as={Link} to={`/admin`} size={'medium'} color={'grey'} >Admin View</Label>
       </Container>
     )
   }

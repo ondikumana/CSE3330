@@ -51,7 +51,12 @@ const cardStyle = {
     display: 'inline-block',
     marginLeft: '15px',
     marginRight: '15px',
-    textAlign: 'left'
+    textAlign: 'left',
+    
+}
+
+const rowStyle = {
+    backgroundColor: 'rgba(255, 255, 255, .2)'
 }
 
 const labelStyle = {
@@ -130,7 +135,7 @@ class Me extends Component {
         return (
             <HomeContext.Consumer>
                 {(value) => {
-                    const { logOut, signOut, adminActive } = value
+                    const { logOut, signOut, adminActive, adminActivePage } = value
 
                     if (!JSON.parse(localStorage.getItem('signedInUser')) || logOut) {
                         return <Redirect push to="/login" />
@@ -173,6 +178,7 @@ class Me extends Component {
                                 <Container textAlign={'center'}>
                                     {!adminActive && <Label size={'large'} color={'blue'} as={Link} to={`/messages`} >Messages</Label>}
                                     {!adminActive && <Label as={'a'} color={deletingAccount ? 'red' : 'blue'} size={'large'} style={labelStyle} onClick={() => this.deleteAccount(signedInUser)}> Delete My Profile </Label>}
+                                    <Label as={Link} to={`/admin`} size={'large'} color={'grey'} style={labelStyle} >Admin View</Label>
                                     <Label as={'a'} color={'blue'} size={'large'} style={labelStyle} onClick={() => signOut()}> Log Out </Label>
                                 </Container>
 
@@ -189,7 +195,7 @@ class Me extends Component {
                                     posts.map((post) => {
                                         return (
                                             <Container key={post.post_id} style={postContainer}>
-                                                <Post post={post} />
+                                                <Post post={post} adminActivePage={adminActivePage} />
                                             </Container>
                                         )
                                     })
