@@ -53,9 +53,9 @@ class Member extends Component {
         }
     }
 
-    checkIfAdmin = (profileId) => {
+    checkIfAdmin = (profileId, pageId) => {
         this.setState({ isAdmin: false })
-        axios.get(`${URL}/fetch_admins?profile_id=${profileId}`)
+        axios.get(`${URL}/fetch_admins?profile_id=${profileId}&page_id=${pageId}`)
             .then((databaseResponse) => {
                 if (databaseResponse.data.length > 0) {
                     this.setState({ isAdmin: true })
@@ -67,12 +67,12 @@ class Member extends Component {
 
     fetchMember = () => {
 
-        const { profileId } = this.props
+        const { profileId, pageId } = this.props
 
         axios.get(`${URL}/fetch_profiles?profile_id=${profileId}`)
             .then((databaseResponse) => {
                 this.setState({ profile: databaseResponse.data[0] })
-                this.checkIfAdmin(profileId)
+                this.checkIfAdmin(profileId, pageId)
             })
 
             .catch(e => console.log(e))
@@ -95,9 +95,12 @@ class Member extends Component {
                             {profile &&
                                 <Container>
                                     <Label
-                                        as={Link} to={`/profile?profile_id=${profile.profile_id}`}
-                                        size={'large'}>
+                                        as={Link} 
+                                        to={`/profile?profile_id=${profile.profile_id}`}
+                                        size={'large'}
+                                        color={'grey'} >
                                         {profile.fname + ' ' + profile.lname}
+                                        {isAdmin && <Label.Detail> Admin </Label.Detail>}
                                     </Label>
                                     {isSignedInUserAdmin &&
                                         <Checkbox

@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Container, Segment, Label, Button } from 'semantic-ui-react'
+import { Container, Segment, Label, Button, Card, Image } from 'semantic-ui-react'
 import { Redirect, Link } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
@@ -11,7 +11,8 @@ import Member from './Member'
 
 const postContainer = {
     marginTop: '20px',
-    marginBottom: '20px'
+    marginBottom: '20px',
+    width: '50%'
 }
 
 const container = {
@@ -20,9 +21,40 @@ const container = {
     paddingLeft: '20px'
 }
 
+const membersHeaderContainer = {
+    marginTop: '20px',
+    marginBottom: '20px',
+}
+
 const newPostButtonStyle = {
     marginTop: '10px',
     marginBottom: '10px'
+}
+
+const searchBarContainer = {
+    marginTop: '40px',
+    marginBottom: '30px'
+}
+
+const cardContainerStyle = {
+    marginTop: '20px',
+    marginBottom: '20px',
+    textAlign: 'center'
+}
+
+const cardStyle = {
+    display: 'inline-block',
+    marginLeft: '15px',
+    marginRight: '15px',
+    textAlign: 'left'
+}
+
+const labelStyle = {
+    marginLeft: '15px'
+}
+
+const newPostLabelStyle = {
+    textAlign: 'center'
 }
 
 class Page extends Component {
@@ -38,7 +70,9 @@ class Page extends Component {
         // adminActive: false,
         isSignedInUserAdmin: false,
         members: null,
-        isMember: false
+        isMember: false,
+        deletingAccount: false,
+        showMembers: false
     }
 
     fetchPosts = () => {
@@ -152,6 +186,14 @@ class Page extends Component {
 
     deleteAccount = (page) => {
 
+        const { deletingAccount } = this.state
+
+        if (!deletingAccount) {
+            this.setState({ deletingAccount: true })
+            setTimeout(() => { this.setState({ deletingAccount: false }) }, 2000)
+            return
+        }
+
         axios.post(`${URL}/remove_account`, {
             account_id: page.account_id,
         })
@@ -186,7 +228,7 @@ class Page extends Component {
 
     render() {
 
-        const { page, category, posts, admins, addingPost, goingBackToMe, adminActive, isSignedInUserAdmin, members, isMember } = this.state
+        const { page, category, posts, admins, addingPost, goingBackToMe, adminActive, isSignedInUserAdmin, members, isMember, deletingAccount, showMembers } = this.state
 
         if (!JSON.parse(localStorage.getItem('signedInUser'))) {
             return <Redirect push to="/login" />
@@ -204,45 +246,67 @@ class Page extends Component {
 
                     return (
                         <Container>
-                            <h1> Page </h1>
+                            {/* <h1> Page </h1> */}
 
-                            <SearchBar fromPage={true} fetchPage={(page_id) => this.fetchPage(page_id)} />
-
-                            <h3>Page Info</h3>
                             <Container style={container}>
                                 {page &&
-                                    <Segment compact>
-                                        <div> <b>Page ID: </b> {page.page_id} </div>
-                                        <div> <b>Page Name: </b> {page.page_name} </div>
-                                        {category && <div> <b>Category: </b> {category} </div>}
-                                        <div> <b>Description: </b> {page.description} </div>
-                                    </Segment>
+                                    <Container style={cardContainerStyle}>
+                                        <Card raised color={'blue'} style={cardStyle}>
+                                            <Image src={`https://ui-avatars.com/api/?size=512&name=${page.page_name}`} />
+                                            <Card.Content>
+                                                <Card.Header>{page.page_name}</Card.Header>
+                                            </Card.Content>
+                                        </Card>
+
+                                        <Card raised color={'blue'} style={cardStyle}>
+                                            {category && <Card.Content> <div> {category} </div> </Card.Content>}
+                                            <Card.Content>
+                                                <Card.Description>{page.description}</Card.Description>
+                                            </Card.Content>
+                                        </Card>
+                                    </Container>
                                 }
-                                {page && !(adminActive && adminActivePage.account_id == page.account_id) && <Label as={Link} to={`/messages?recipient_id=${page.account_id}`} >Send Message</Label>}
-                                {page && (adminActive && adminActivePage.account_id == page.account_id) && <Label as={Link} to={`/messages`} >Messages</Label>}
+
+                                <Container textAlign={'center'}>
+
+                                    {page && !(adminActive && adminActivePage.account_id == page.account_id) && <Label color={'blue'} size={'large'} style={labelStyle} as={Link} to={`/messages?recipient_id=${page.account_id}`} >Send Message</Label>}
+                                    {page && (adminActive && adminActivePage.account_id == page.account_id) && <Label color={'blue'} size={'large'} style={labelStyle} as={Link} to={`/messages`} >Messages</Label>}
+
+                                    {isSignedInUserAdmin && <Label as={'a'} color={adminActive ? 'green' : 'blue'} size={'large'} style={labelStyle} onClick={() => toggleAdminActive(page)}> {adminActive ? 'Stop Being Active Admin' : 'Be Active Admin'} </Label>}
+                                    {isSignedInUserAdmin && adminActive && <Label as={'a'} color={deletingAccount ? 'red' : 'blue'} size={'large'} style={labelStyle} onClick={() => this.deleteAccount(page)}> Delete This Page </Label>}
+
+                                    {members && <Label as={'a'} color={'blue'} size={'large'} style={labelStyle} onClick={this.changeMembership}> {isMember ? 'Leave Page' : 'Join Page'} </Label>}
+                                    <Label as={'a'} color={'blue'} size={'large'} style={labelStyle} onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Label>
+
+                                </Container>
+
+                                <Container textAlign={'center'} style={searchBarContainer}>
+                                    <label>Search Pages/Profiles</label>
+                                    <SearchBar fromPage={true} fetchPage={(page_id) => this.fetchPage(page_id)} />
+                                </Container>
+
+                                <Container textAlign={'center'} style={membersHeaderContainer} >
+                                    <Label as={'a'} color={'blue'} size={'medium'} onClick={() => this.setState({ showMembers: !showMembers })} > {showMembers ? 'Hide Members' : 'Show Members'} </Label>
+                                </Container>
+
+                                <Container textAlign={'center'}>
+                                    {members && showMembers &&
+                                        members.map((member) => {
+                                            return (
+                                                <Member
+                                                    key={member.profile_id}
+                                                    profileId={member.profile_id}
+                                                    pageId={page.page_id}
+                                                    isSignedInUserAdmin={isSignedInUserAdmin} />
+                                            )
+                                        })
+                                    }
+                                </Container>
+
                             </Container>
 
-                            <h3>Page Members</h3>
                             <Container style={container}>
-                                {members &&
-                                    members.map((member) => {
-                                        return (
-                                            <Member
-                                                key={member.profile_id}
-                                                profileId={member.profile_id}
-                                                pageId={page.page_id}
-                                                isSignedInUserAdmin={isSignedInUserAdmin} />
-                                        )
-                                    })
-                                }
-                                {members &&
-                                    <Button style={newPostButtonStyle} compact onClick={this.changeMembership}> {isMember ? 'Leave Page' : 'Join Page' } </Button>
-                                }
-                            </Container>
-
-
-                            <h3>Posts</h3>
-                            <Container style={container}>
+                                {/* <h3 style={postHeaderStyle} >Posts</h3> */}
                                 {posts && posts.length > 0 &&
                                     posts.map((post) => {
                                         return (
@@ -253,24 +317,16 @@ class Page extends Component {
                                     })
                                 }
                                 {addingPost &&
-                                    <NewPost
-                                        destinationId={page.account_id}
-                                        style={postContainer}
-                                        doneAddingPost={() => { this.setState({ addingPost: false }); this.fetchPosts() }}
-                                        cancelNewPost={() => this.setState({ addingPost: false })} />
+                                    <Container style={postContainer}>
+                                        <NewPost
+                                            destinationId={page.account_id}
+                                            doneAddingPost={() => { this.setState({ addingPost: false }); this.fetchPosts() }}
+                                            cancelNewPost={() => this.setState({ addingPost: false })} />
+                                    </Container>
+
                                 }
-                                {page && <Button compact onClick={() => this.setState({ addingPost: true })}> Create Post on This Page </Button>}
+                                {posts && <div style={newPostLabelStyle}> <Label as={'a'} color={'blue'} size={'medium'} onClick={() => this.setState({ addingPost: true })}> Create Post on This Page </Label> </div>}
                             </Container>
-
-                            {isSignedInUserAdmin &&
-                                <div>
-                                    <Button style={newPostButtonStyle} compact onClick={() => toggleAdminActive(page)}> {adminActive ? 'Stop Being Active Admin' : 'Be Active Admin'} </Button>
-                                    <br />
-                                    <Button style={newPostButtonStyle} compact onClick={() => this.deleteAccount(page)}> Delete This Page </Button>
-                                </div>
-                            }
-
-                            <Button style={newPostButtonStyle} compact onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Button>
 
                         </Container>
                     )

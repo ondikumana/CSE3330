@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Container, Segment, Comment, Button, Label } from 'semantic-ui-react'
+import { Container, Segment, Comment, Button, Label, Card, Image } from 'semantic-ui-react'
 import { Redirect, Link } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
@@ -9,7 +9,8 @@ import SearchBar from '../Home/SearchBar';
 
 const postContainer = {
     marginTop: '20px',
-    marginBottom: '20px'
+    marginBottom: '20px',
+    width: '50%'
 }
 
 const container = {
@@ -18,9 +19,35 @@ const container = {
     paddingLeft: '20px'
 }
 
+const searchBarContainer = {
+    marginTop: '40px',
+    marginBottom: '50px'
+}
+
 const newPostButtonStyle = {
     marginTop: '10px',
     marginBottom: '10px'
+}
+
+const cardContainerStyle = {
+    marginTop: '20px',
+    marginBottom: '20px',
+    textAlign: 'center'
+}
+
+const cardStyle = {
+    display: 'inline-block',
+    marginLeft: '15px',
+    marginRight: '15px',
+    textAlign: 'left'
+}
+
+const labelStyle = {
+    marginLeft: '15px'
+}
+
+const newPostLabelStyle = {
+    textAlign: 'center'
 }
 
 class Profile extends Component {
@@ -53,9 +80,9 @@ class Profile extends Component {
 
     fetchProfile = (profile_id) => {
         axios.get(`${URL}/fetch_profiles?profile_id=${profile_id}`)
-            .then( (databaseResponse) => this.setState({ profile: databaseResponse.data[0] }, () => this.fetchPosts() ) )
+            .then((databaseResponse) => this.setState({ profile: databaseResponse.data[0] }, () => this.fetchPosts()))
 
-            .catch( e => console.log(e) )
+            .catch(e => console.log(e))
     }
 
     componentDidMount = () => {
@@ -90,28 +117,52 @@ class Profile extends Component {
 
         return (
             <Container>
-                <h1> Profile </h1>
+                {/* <h1> Profile </h1> */}
 
-                <SearchBar fromProfile={true} fetchProfile={ (profile_id) => this.fetchProfile(profile_id) }/>
-
-                <h3>Profile Info</h3>
                 <Container style={container}>
                     {profile &&
-                        <Segment compact>
-                            <div> <b>Profile ID: </b> {profile.profile_id} </div>
-                            <div> <b>First Name: </b> {profile.fname} </div>
-                            <div> <b>Last Name: </b> {profile.lname} </div>
-                            <div> <b>Phone: </b> {profile.phone} </div>
-                            <div> <b>Email: </b> {profile.email} </div>
-                            <div> <b>Username: </b> {profile.username} </div>
-                            <div> <b>Account ID: </b> {profile.account_id} </div>
-                        </Segment>
+                        <Container style={cardContainerStyle}>
+                            <Card raised color={'blue'} style={cardStyle}>
+                                <Image src={`https://ui-avatars.com/api/?size=512&name=${profile.fname + ' ' + profile.lname}`} />
+                                <Card.Content>
+                                    <Card.Header>{profile.fname} {profile.lname}</Card.Header>
+                                </Card.Content>
+                            </Card>
+
+                            <Card raised color={'blue'} style={cardStyle}>
+                                <Card.Content>
+                                    <b>Profile ID: </b> {profile.profile_id}
+                                </Card.Content>
+                                <Card.Content>
+                                    <b>Account ID: </b> {profile.account_id}
+                                </Card.Content>
+                                <Card.Content>
+                                    <b>Phone: </b> {profile.phone}
+                                </Card.Content>
+                                <Card.Content>
+                                    <b>Email: </b> {profile.email}
+                                </Card.Content>
+                                <Card.Content>
+                                    <b>Username: </b> {profile.username}
+                                </Card.Content>
+                            </Card>
+                        </Container>
                     }
-                    {profile && <Label as={Link} to={`/messages?recipient_id=${profile.account_id}`} >Send Message</Label>}
+
+                    <Container textAlign={'center'}>
+                        {profile && <Label size={'large'} color={'blue'} as={Link} to={`/messages?recipient_id=${profile.account_id}`} >Send Message</Label>}
+                        <Label size={'large'} color={'blue'} as={'a'} style={labelStyle} onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Label>
+                    </Container>
+
+                    <Container textAlign={'center'} style={searchBarContainer}>
+                        <label>Search Pages/Profiles</label>
+                        <SearchBar fromProfile={true} fetchProfile={(profile_id) => this.fetchProfile(profile_id)} />
+                    </Container>
+
                 </Container>
 
-                <h3>Posts</h3>
                 <Container style={container}>
+                    {/* <h3 style={postHeaderStyle} >Posts</h3> */}
                     {posts && posts.length > 0 &&
                         posts.map((post) => {
                             return (
@@ -122,16 +173,16 @@ class Profile extends Component {
                         })
                     }
                     {addingPost &&
-                        <NewPost
-                            destinationId={profile.account_id}
-                            style={postContainer}
-                            doneAddingPost={() => { this.setState({ addingPost: false }); this.fetchPosts() }}
-                            cancelNewPost={() => this.setState({ addingPost: false })} />
-                    }
-                    {profile && <Button compact onClick={() => this.setState({ addingPost: true })}> Create Post on {profile.fname.endsWith('s') ? profile.fname + "'" : profile.fname + "'s"} Profile </Button>}
-                </Container>
+                        <Container style={postContainer}>
+                            <NewPost
+                                destinationId={profile.account_id}
+                                doneAddingPost={() => { this.setState({ addingPost: false }); this.fetchPosts() }}
+                                cancelNewPost={() => this.setState({ addingPost: false })} />
+                        </Container>
 
-                <Button style={newPostButtonStyle} compact onClick={ () => this.setState({ goingBackToMe: true })}> Go Back to Me </Button>
+                    }
+                    {posts && <div style={newPostLabelStyle}> <Label as={'a'} color={'blue'} size={'medium'} onClick={() => this.setState({ addingPost: true })}> Create Post on {profile.fname.endsWith('s') ? profile.fname + "'" : profile.fname + "'s"} Profile </Label> </div>}
+                </Container>
 
                 {/* <Button style={newPostButtonStyle} compact onClick={this.signOut}> Log Out </Button> */}
 

@@ -46,10 +46,12 @@ class AdminPage extends Component {
                         <div style={pageStyle}>
                             {page &&
                                 <Container>
-                                    <Label 
+                                    <Label
                                         as={Link} to={`/page?page_id=${page.page_id}`}
-                                        size={'large'}>
+                                        size={'large'}
+                                        color={(adminActivePage && adminActivePage.page_id == page.page_id) ? 'green' : 'grey'} >
                                         {page.page_name}
+                                        <Label.Detail> {(adminActivePage && adminActivePage.page_id == page.page_id) ? 'Active' : 'Not Active'} </Label.Detail>
                                     </Label>
                                     <Checkbox 
                                         style={checkboxStyle} 

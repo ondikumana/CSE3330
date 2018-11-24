@@ -4,9 +4,6 @@ import axios from 'axios'
 import URL from '../../../BackendUrl'
 import { HomeContext } from './HomeProvider';
 
-const textAreaStyle = {
-    width: '70%'
-}
 
 class NewPost extends Component {
     state = {
@@ -53,7 +50,7 @@ class NewPost extends Component {
                     return (
                         <div>
                             {signedInUser &&
-                                <Segment style={textAreaStyle}>
+                                <Segment color={'blue'}>
                                     <Comment.Group>
                                         <Comment>
                                             <Comment.Avatar src={adminActive ? `https://ui-avatars.com/api/?name=${adminActivePage.page_name}` : `https://ui-avatars.com/api/?name=${signedInUser.fname + ' ' + signedInUser.lname}`} />

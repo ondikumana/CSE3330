@@ -137,7 +137,7 @@ class SearchBar extends React.Component {
                     onSearchChange={_.debounce(this.handleSearchChange, 500, { leading: true })}
                     results={results}
                     value={value}
-                    input={{ width: '50%', placeholder: 'Enter Page Name or Profile Name' }}
+                    input={{ width: '50%', placeholder: 'Page/Profile...' }}
                     fluid
                 />
             </Container>

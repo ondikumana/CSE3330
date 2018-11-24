@@ -1,11 +1,12 @@
 import React, { Component } from 'react'
-import { Container, Segment, Comment, Icon, Button } from 'semantic-ui-react'
+import { Container, Segment, Comment, Icon, Button, Label } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import URL from '../../../BackendUrl'
 import PostComment from './PostComment'
 import NewComment from './NewComment'
-import { HomeContext } from './HomeProvider';
+import { HomeContext } from './HomeProvider'
+
 
 const commentContainerStyle = {
     paddingLeft: '50px',
@@ -253,7 +254,7 @@ class Post extends Component {
 
                     return (
                         <Container>
-                            <Segment compact>
+                            <Segment compact color={post.author_id == signedInUser.account_id ? 'blue' : 'teal'}>
                                 {signedInUser && authorAccountId && names && names[post.author_id] &&
                                     <Comment.Group>
                                         <Comment>
@@ -307,7 +308,7 @@ class Post extends Component {
                                             cancelNewComment={() => this.setState({ addingComment: false })} />
                                     }
 
-                                    <Button compact onClick={() => this.setState({ addingComment: true })}>New Comment</Button>
+                                    <Label as={'a'} color={'blue'} size={'medium'} onClick={() => this.setState({ addingComment: true })}>New Comment</Label>
                                 </Container>
                             }
 

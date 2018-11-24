@@ -68,8 +68,13 @@ class Sender extends Component {
         const { setActiveSender, senderId } = this.props
         return (
             <Container style={container}>
-                <Label as='a' onClick={() => setActiveSender(parseInt(senderId))}>
-                    {/* <Image circular src={`https://ui-avatars.com/api/?name=${name}`} />  */}
+                <Label 
+                    as='a'
+                    size={'large'}
+                    color={'grey'}
+                    image 
+                    onClick={() => setActiveSender(parseInt(senderId))}>
+                    <Image avatar spaced={'right'} src={`https://ui-avatars.com/api/?name=${name}`} />
                     {name}
                 </Label>
             </Container>

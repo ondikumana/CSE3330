@@ -7,9 +7,22 @@ import Conversation from './Conversation'
 import { Redirect } from 'react-router-dom'
 
 const buttonStyle = {
-    marginTop: '10px',
+    marginTop: '5px',
     marginBottom: '10px',
     marginLeft: '20px'
+}
+
+const container = {
+    paddingTop: '100px'
+}
+
+const headerStyle = {
+    textAlign: 'center',
+    marginBottom: '40px'
+}
+
+const gridStyle = {
+    paddingTop: '100px'
 }
 
 class Messages extends Component {
@@ -131,13 +144,11 @@ class Messages extends Component {
 
         return (
             <Container>
-                
-                <h1>Messages</h1>
-                {adminActivePage && <div> <Label>Active as {adminActivePage.page_name}</Label> <br/><br/> </div>}
 
-                <Grid divided>
+                <Grid divided style={gridStyle}>
                     <Grid.Row>
-                        <Grid.Column width={4}>
+                        <Grid.Column width={6}>
+                            <Container style={headerStyle}> <h3>People</h3> </Container>
                             {senders &&
                                 senders.map((sender) => {
                                     return (
@@ -149,19 +160,26 @@ class Messages extends Component {
                                 })
                             }
                         </Grid.Column>
-                        <Grid.Column width={12}>
-                            {activeSender &&
+                        <Grid.Column width={10}>
+                            <Container style={headerStyle}> <h3>Conversation</h3> </Container>
+                            {activeSender ?
                                 <Conversation
                                     activeSender={activeSender}
                                     convoMessages={convoMessages}
                                     signedInUser={signedInUser}
                                     fetchMessages={() => this.fetchMessages()}
                                     adminActivePage={adminActivePage} />
+                                :
+                                <Container textAlign={'center'} style={container}>
+                                    {senders && senders.length > 0 && <h3>Select Person on the Left</h3> }
+                                </Container>
                             }
                         </Grid.Column>
                     </Grid.Row>
                 </Grid>
-                <Button style={buttonStyle} compact onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Button>
+                
+                <Label as={'a'} color={'blue'} size={'large'} style={buttonStyle} onClick={() => this.setState({ goingBackToMe: true })}> Go Back to Me </Label>
+                {adminActivePage && <Label size={'medium'} color={'green'} style={buttonStyle} >Active as {adminActivePage.page_name}</Label>}
             </Container>
         )
     }

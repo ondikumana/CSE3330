@@ -8,6 +8,10 @@ const inputStyle = {
     width: '100%'
 }
 
+const container = {
+    marginTop: '15px'
+}
+
 class TextBox extends Component {
     state = {
         message: ''
@@ -50,7 +54,7 @@ class TextBox extends Component {
         const { message } = this.state
 
         return (
-            <Container>
+            <Container style={container}>
                 <Input
                     style={inputStyle}
                     icon={
