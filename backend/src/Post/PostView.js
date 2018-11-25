@@ -1,4 +1,4 @@
-module.exports = function(app, sql) {
+module.exports = function(app, client) {
 
   app.get('/fetch_post_views', async (req, res) =>  {
     // gets all members who viewed the post if the post_id is provided in the query params
@@ -11,11 +11,11 @@ module.exports = function(app, sql) {
     }
 
     try {
-      const result = await sql.query`select * from postview where post_id = ${post_id}`
-      res.status(200).send(result.recordset)
+      const result = await client.query(`select * from postview where post_id = ${post_id}`)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -46,13 +46,13 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into postview (post_id, viewed_by_id, time) values (${postView.post_id}, ${postView.viewed_by_id}, DEFAULT)`
-      res.status(200).send(result)
+      const result = await client.query(`insert into postview (post_id, viewed_by_id) values (${postView.post_id}, ${postView.viewed_by_id})`)
+      res.status(200).send(result.rows)
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 

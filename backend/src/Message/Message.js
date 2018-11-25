@@ -1,4 +1,4 @@
-module.exports = function(app, sql) {
+module.exports = function(app, client) {
   //profile ids will start from 1000, they'll grow by an interval of 1000 and the begining of the number matches the corresponding account_id. ex 1 -> 1000, 12 -> 12000
 
   app.get('/fetch_messages', async (req, res) =>  {
@@ -16,19 +16,19 @@ module.exports = function(app, sql) {
       let result
 
       if (recipient_id && sender_id){
-        result = await sql.query`select * from message where recipient_id = ${recipient_id} or sender_id = ${sender_id}`
+        result = await client.query(`select * from message where recipient_id = ${recipient_id} or sender_id = ${sender_id}`)
       }
       else if (recipient_id && !sender_id) {
-        result = await sql.query`select * from message where recipient_id = ${recipient_id}`
+        result = await client.query(`select * from message where recipient_id = ${recipient_id}`)
       }
       else if (!recipient_id && sender_id) {
-        result = await sql.query`select * from message where sender_id = ${sender_id}`
+        result = await client.query(`select * from message where sender_id = ${sender_id}`)
       }
 
-      res.status(200).send(result.recordset)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -64,13 +64,13 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into message (recipient_id, sender_id, sent_time, was_sent, was_delivered, was_read, body) values (${message.recipient_id}, ${message.sender_id}, DEFAULT, 1, 0, 0, ${message.body})`
-      res.status(200).send(result)
+      const result = await client.query(`insert into message (recipient_id, sender_id, was_sent, was_delivered, was_read, body) values (${message.recipient_id}, ${message.sender_id}, 'true', 'false', 'false', '${message.body}')`)
+      res.status(200).send(result.rows)
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 

@@ -1,4 +1,4 @@
-module.exports = function (app, sql) {
+module.exports = function (app, client) {
 
     app.get('/fetch_categories', async (req, res) => {
       // gets all category description or all categories
@@ -8,16 +8,16 @@ module.exports = function (app, sql) {
       try {
         let result 
         if (category_id) {
-            result = await sql.query`select * from category where category_id = ${category_id}`
+            result = await client.query(`select * from category where category_id = ${category_id}`)
         }
         else {
-            result = await sql.query`select * from category`
+            result = await client.query(`select * from category`)
         }
 
-        res.status(200).send(result.recordset)
+        res.status(200).send(result.rows)
       }
       catch (err) {
-        console.log(err)
+        console.log(err.detail)
         res.status(404).send(err)
       }
   
@@ -43,13 +43,13 @@ module.exports = function (app, sql) {
   
       //adding data to database
       try {
-        const result = await sql.query`insert into category (category_description) values (${category.category_description}); select scope_identity() as category_id`
-        res.status(200).send(result.recordset)
+        const result = await client.query(`insert into category (category_description) values ('${category.category_description}'); SELECT last_value FROM category_id_seq`)
+        res.status(200).send( [ { category_id: parseInt(result[1].rows[0].last_value) } ] )
         return
       }
       catch (err) {
-        console.log(err.originalError.info.message)
-        res.status(404).send(err.originalError.info.message)
+        console.log(err.detail)
+        res.status(404).send(err)
         return
       }
   
@@ -64,24 +64,24 @@ module.exports = function (app, sql) {
       }
   
       const category = {
-        category_description: req.body.category_description
+        category_id: req.body.category_id
       }
   
       //body validation
-      if (!category.category_description) {
-        res.status(404).send("missing category_description")
+      if (!category.category_id) {
+        res.status(404).send("missing category_id")
         return
       }
   
       //adding data to database
       try {
-        const result = await sql.query`delete from category where category_id = ${category.category_description}`
+        const result = await client.query(`delete from category where category_id = ${category.category_id}`)
         res.status(200).send(result)
         return
       }
       catch (err) {
-        console.log(err.originalError.info.message)
-        res.status(404).send(err.originalError.info.message)
+        console.log(err.detail)
+        res.status(404).send(err)
         return
       }
   

@@ -1,4 +1,4 @@
-module.exports = function(app, sql) {
+module.exports = function(app, client) {
   //profile ids will start from 1000, they'll grow by an interval of 1000 and the begining of the number matches the corresponding account_id. ex 1 -> 1000, 12 -> 12000
 
   app.get('/fetch_profiles', async (req, res) =>  {
@@ -13,25 +13,25 @@ module.exports = function(app, sql) {
       let result
 
       if (account_id){
-        result = await sql.query`select * from profile where account_id = ${account_id}`
+        result = await client.query(`select * from profile where account_id = ${account_id}`)
       }
       else if (profile_id){
-        result = await sql.query`select * from profile where profile_id = ${profile_id}`
+        result = await client.query(`select * from profile where profile_id = ${profile_id}`)
       }
       else if (email) {
-        result = await sql.query`select * from profile where email = ${email}`
+        result = await client.query(`select * from profile where email = '${email}'`)
       }
       else if (username) {
-        result = await sql.query`select * from profile where username = ${username}`
+        result = await client.query(`select * from profile where username = '${username}'`)
       }
       else {
-        result = await await sql.query`select * from profile`
+        result = await await client.query(`select * from profile`)
       }
 
-      res.status(200).send(result.recordset)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -82,7 +82,7 @@ module.exports = function(app, sql) {
     }
 
     //check if account connected to this profile is valid
-    const account_type = await fetchAccountType(profile.account_id, sql)
+    const account_type = await fetchAccountType(profile.account_id, client)
 
     if (account_type != 'profile'){
       res.status(404).send("invalid account. make sure the account is a profile")
@@ -91,13 +91,13 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into profile (fname, lname, phone, email, username, password, account_id) values (${profile.fname}, ${profile.lname}, ${profile.phone}, ${profile.email}, ${profile.username}, ${profile.password}, ${profile.account_id}); select scope_identity() as profile_id`
-      res.status(200).send(result.recordset)
+      const result = await client.query(`insert into profile (fname, lname, phone, email, username, password, account_id) values ('${profile.fname}', '${profile.lname}', '${profile.phone}', '${profile.email}', '${profile.username}', '${profile.password}', ${profile.account_id}); SELECT last_value FROM profile_id_seq`)
+      res.status(200).send( [ { profile_id: parseInt(result[1].rows[0].last_value) } ] )
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 
@@ -106,15 +106,15 @@ module.exports = function(app, sql) {
 }
 
 
-async function fetchAccountType(account_id, sql) {
+async function fetchAccountType(account_id, client) {
 
   try {
-    const result = await sql.query`select account_type from account where account_id = ${account_id}`
-    // console.log(result.recordset[0].account_type)
-    return result.recordset[0].account_type
+    const result = await client.query(`select account_type from account where account_id = ${account_id}`)
+    // console.log(result.rows[0].account_type)
+    return result.rows[0].account_type
   }
   catch (err) {
-    console.log(err)
+    console.log(err.detail)
     return null
   }
 

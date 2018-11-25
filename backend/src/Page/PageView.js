@@ -1,4 +1,4 @@
-module.exports = function(app, sql) {
+module.exports = function(app, client) {
 
   app.get('/fetch_page_views', async (req, res) =>  {
     // gets all members who viewd the page if the page_id is provided in the query params
@@ -11,11 +11,11 @@ module.exports = function(app, sql) {
     }
 
     try {
-      const result = await sql.query`select * from pageview where page_id = ${page_id}`
-      res.status(200).send(result.recordset)
+      const result = await client.query(`select * from pageview where page_id = ${page_id}`)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -46,13 +46,13 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into pageview (page_id, profile_id) values (${pageView.page_id}, ${pageView.profile_id})`
+      const result = await client.query(`insert into pageview (page_id, profile_id) values (${pageView.page_id}, ${pageView.profile_id})`)
       res.status(200).send(result)
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 

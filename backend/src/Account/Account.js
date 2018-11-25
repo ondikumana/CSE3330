@@ -1,5 +1,6 @@
-module.exports = function (app, sql) {
+module.exports = function (app, client) {
   // account ids will start from 0
+  //TODO: revise remove function
 
   app.get('/fetch_accounts', async (req, res) => {
     // gets all accounts or one account if the account id is provided in the query params
@@ -7,11 +8,11 @@ module.exports = function (app, sql) {
     const account_id = req.query.account_id ? parseInt(req.query.account_id) : null
 
     try {
-      const result = account_id != null ? await sql.query`select * from account where account_id = ${account_id}` : await sql.query`select * from account`
-      res.status(200).send(result.recordset)
+      const result = account_id != null ? await client.query(`select * from account where account_id = ${account_id}`) : await client.query(`select * from account`)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -44,13 +45,14 @@ module.exports = function (app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into account (creation_date, account_type) values (DEFAULT, ${account.account_type}); select scope_identity() as account_id`
-      res.status(200).send(result.recordset)
+      const result = await client.query(`insert into account (account_type) values ('${account.account_type}'); SELECT last_value FROM account_id_seq`)
+
+      res.status(200).send( [ { account_id: parseInt(result[1].rows[0].last_value) } ] )
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 
@@ -78,47 +80,47 @@ module.exports = function (app, sql) {
     //adding data to database
     try {
 
-      await sql.query`delete from postview where viewed_by_id = ${account.account_id}`
-      await sql.query`delete from postlike where liked_by_id = ${account.account_id}`
-      await sql.query`delete from commentlike where liked_by_id = ${account.account_id}`
-      await sql.query`delete from comment where author_id = ${account.account_id}`
-      await sql.query`delete from post where author_id = ${account.account_id}`
-      await sql.query`delete from message where sender_id = ${account.account_id} or recipient_id = ${account.account_id}`
-      await sql.query`delete w from member w inner join page p on p.page_id = w.page_id where account_id = ${account.account_id}`
+      // await client.query(`delete from postview where viewed_by_id = ${account.account_id}`)
+      // await client.query(`delete from postlike where liked_by_id = ${account.account_id}`)
+      // await client.query(`delete from commentlike where liked_by_id = ${account.account_id}`)
+      // await client.query(`delete from comment where author_id = ${account.account_id}`)
+      // await client.query(`delete from post where author_id = ${account.account_id}`)
+      // await client.query(`delete from message where sender_id = ${account.account_id} or recipient_id = ${account.account_id}`)
+      // await client.query(`delete w from member w inner join page p on p.page_id = w.page_id where account_id = ${account.account_id}`)
 
-      let pages = await sql.query`select a.page_id from admin as a, profile as p where p.account_id = ${account.account_id}`
-      pages = pages.recordset
+      let pages = await client.query(`select a.page_id from admin as a, profile as p where p.account_id = ${account.account_id} and a.profile_id = p.profile_id`)
+      pages = pages.rows
 
-      console.log(pages)
+      console.log('pages', pages)
 
       pages.forEach(async (page) => {
         // for each page, check if it has more than one admin, otherwise delete it
         try {
-          let admins = await sql.query`select * from admin where page_id = ${page.page_id}`
-          admins = admins.recordset
-          console.log(admins)
+          let admins = await client.query(`select * from admin where page_id = ${page.page_id}`)
+          admins = admins.rows
+          console.log('admins', admins)
           if (admins.length == 1) {
             // delete it
-            await sql.query`delete from page where page_id = ${page.page_id}`
+            await client.query(`delete from page where page_id = ${page.page_id}`)
           }
         }
         catch (e) {
-          console.log(e)
+          console.log(err.detail)
         }
 
       })
 
-      await sql.query`delete w from admin w inner join page p on p.page_id = w.page_id where account_id = ${account.account_id}`
-      await sql.query`delete from profile where account_id = ${account.account_id}`
-      await sql.query`delete from page where account_id = ${account.account_id}`
+      // await client.query(`delete w from admin w inner join page p on p.page_id = w.page_id where account_id = ${account.account_id}`)
+      // await client.query(`delete from profile where account_id = ${account.account_id}`)
+      // await client.query(`delete from page where account_id = ${account.account_id}`)
 
-      const result = await sql.query`delete from account where account_id = ${account.account_id}`
-      res.status(200).send(result.recordset)
+      const result = await client.query(`delete from account where account_id = ${account.account_id}`)
+      res.status(200).send(result.rows)
       return
     }
     catch (err) {
-      console.log(err)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 

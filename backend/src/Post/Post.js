@@ -1,4 +1,4 @@
-module.exports = function(app, sql) {
+module.exports = function(app, client) {
   //post ids will start from 3000 increment by 1
 
   app.get('/fetch_posts', async (req, res) =>  {
@@ -11,22 +11,22 @@ module.exports = function(app, sql) {
       let result 
 
       if (author_id && destination_id) {
-        result = await sql.query`select * from post where author_id = ${author_id} and destination_id = ${destination_id}` 
+        result = await client.query(`select * from post where author_id = ${author_id} and destination_id = ${destination_id}`) 
       } 
       else if (author_id && !destination_id) {
-        result = await sql.query`select * from post where author_id = ${author_id}` 
+        result = await client.query(`select * from post where author_id = ${author_id}`)
       }
       else if (!author_id && destination_id) {
-        result = await sql.query`select * from post where destination_id = ${destination_id}`
+        result = await client.query(`select * from post where destination_id = ${destination_id}`)
       }
       else {
-        result = await sql.query`select * from post`
+        result = await client.query(`select * from post`)
       }
       
-      res.status(200).send(result.recordset)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -64,13 +64,12 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into post (time, author_id, destination_id, body, attachment_url) VALUES(DEFAULT, ${post.author_id}, ${post.destination_id}, ${post.body}, ${post.attachment_url}); select scope_identity() as post_id`
-      res.status(200).send(result.recordset)
-      return
+      const result = await client.query(`insert into post (author_id, destination_id, body, attachment_url) VALUES(${post.author_id}, ${post.destination_id}, '${post.body}', '${post.attachment_url}'); SELECT last_value FROM post_id_seq`)
+      res.status(200).send( [ { post_id: parseInt(result[1].rows[0].last_value) } ] )
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 

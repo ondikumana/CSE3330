@@ -1,4 +1,4 @@
-module.exports = function(app, sql) {
+module.exports = function(app, client) {
   //page ids will start from 100, they'll grow by an interval of 100 and the begining of the number matches the corresponding account_id. ex 1 -> 100, 12 -> 1200
 
 
@@ -12,21 +12,21 @@ module.exports = function(app, sql) {
     try {
       let result
       if (page_id && account_id) {
-        result = await sql.query`select * from page where account_id = ${account_id} and page_id = ${page_id}`
+        result = await client.query(`select * from page where account_id = ${account_id} and page_id = ${page_id}`)
       }
       else if (page_id && !account_id) {
-        result = await sql.query`select * from page where page_id = ${page_id}`
+        result = await client.query(`select * from page where page_id = ${page_id}`)
       }
       else if (!page_id && account_id) {
-        result = await sql.query`select * from page where account_id = ${account_id}`
+        result = await client.query(`select * from page where account_id = ${account_id}`)
       }
       else {
-        result = await sql.query`select * from page`
+        result = await client.query(`select * from page`)
       }
-      res.status(200).send(result.recordset)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -76,7 +76,7 @@ module.exports = function(app, sql) {
     }
 
     //check if account connected to this page is valid
-    const account_type = await fetchAccountType(page.account_id, sql)
+    const account_type = await fetchAccountType(page.account_id, client)
 
     if (account_type != 'page'){
       res.status(404).send("invalid account. make sure the account is a page")
@@ -85,13 +85,13 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into page (page_name, logo_url, header_image_url, description, category, account_id) values (${page.page_name}, ${page.logo_url}, ${page.header_image_url}, ${page.description}, ${page.category}, ${page.account_id}); select scope_identity() as page_id`
-      res.status(200).send(result.recordset)
+      const result = await client.query(`insert into page (page_name, logo_url, header_image_url, description, category, account_id) values ('${page.page_name}', '${page.logo_url}', '${page.header_image_url}', '${page.description}', ${page.category}, ${page.account_id}); SELECT last_value FROM page_id_seq`)
+      res.status(200).send( [ { page_id: parseInt(result[1].rows[0].last_value) } ] )
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 
@@ -101,7 +101,6 @@ module.exports = function(app, sql) {
     // creates a profile given an object of info in the body. Info validation is to be done from frontend
 
     if (!req.body) {
-      console.log('missing body')
       res.status(404).send("missing body")
       return
     }
@@ -116,7 +115,6 @@ module.exports = function(app, sql) {
     }
 
     if (!page.page_id) {
-      console.log('missing page_id')
       res.status(404).send("missing page_id")
       return
     }
@@ -127,27 +125,27 @@ module.exports = function(app, sql) {
       let result
 
       if (page.page_name) {
-        await sql.query`update page set page_name = ${page.page_name} where page_id = ${page.page_id}`
+        await client.query(`update page set page_name = '${page.page_name}' where page_id = ${page.page_id}`)
       }
       if (page.logo_url) {
-        await sql.query`update page set logo_url = ${page.logo_url} where page_id = ${page.page_id}`
+        await client.query(`update page set logo_url = '${page.logo_url}' where page_id = ${page.page_id}`)
       }
       if (page.header_image_url) {
-        await sql.query`update page set header_image_url = ${page.header_image_url} where page_id = ${page.page_id}`
+        await client.query(`update page set header_image_url = '${page.header_image_url}' where page_id = ${page.page_id}`)
       }
       if (page.description) {
-        await sql.query`update page set description = ${page.description} where page_id = ${page.page_id}`
+        await client.query(`update page set description = '${page.description}' where page_id = ${page.page_id}`)
       }
       if (page.category) {
-        await sql.query`update page set category = ${page.category} where page_id = ${page.page_id}`
+        await client.query(`update page set category = ${page.category} where page_id = ${page.page_id}`)
       }
 
       res.status(200).send('done')
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(400).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(400).send(err)
       return
     }
 
@@ -155,15 +153,15 @@ module.exports = function(app, sql) {
 
 }
 
-async function fetchAccountType(account_id, sql) {
+async function fetchAccountType(account_id, client) {
 
   try {
-    const result = await sql.query`select account_type from account where account_id = ${account_id}`
-    // console.log(result.recordset[0].account_type)
-    return result.recordset[0].account_type
+    const result = await client.query(`select account_type from account where account_id = ${account_id}`)
+    // console.log(result.rows[0].account_type)
+    return result.rows[0].account_type
   }
   catch (err) {
-    console.log(err)
+    console.log(err.detail)
     return null
   }
 

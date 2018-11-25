@@ -1,4 +1,4 @@
-module.exports = function(app, sql) {
+module.exports = function(app, client) {
   //profile ids will start from 1000, they'll grow by an interval of 1000 and the begining of the number matches the corresponding account_id. ex 1 -> 1000, 12 -> 12000
 
   app.get('/fetch_comments', async (req, res) =>  {
@@ -10,16 +10,16 @@ module.exports = function(app, sql) {
       let result
 
       if (post_id) {
-        result = await sql.query`select * from comment where post_id = ${post_id}`
+        result = await client.query(`select * from comment where post_id = ${post_id}`)
       }
       else {
-        result = await sql.query`select * from comment`
+        result = await client.query(`select * from comment`)
       }
 
-      res.status(200).send(result.recordset)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -57,13 +57,13 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into comment (time, author_id, post_id, body) values (DEFAULT, ${comment.author_id}, ${comment.post_id}, ${comment.body}); select scope_identity() as comment_id`
-      res.status(200).send(result.recordset)
+      const result = await client.query(`insert into comment (author_id, post_id, body) values (${comment.author_id}, ${comment.post_id}, '${comment.body}'); SELECT last_value FROM comment_id_seq`)
+      res.status(200).send( [ { comment_id: parseInt(result[1].rows[0].last_value) } ] )
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 

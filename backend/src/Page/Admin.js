@@ -1,4 +1,4 @@
-module.exports = function(app, sql) {
+module.exports = function(app, client) {
 
   app.get('/fetch_admins', async (req, res) =>  {
     // gets all admins if the page_id is provided in the query params
@@ -11,22 +11,22 @@ module.exports = function(app, sql) {
       let result 
 
       if (page_id && profile_id) {
-        result = await sql.query`select * from admin where page_id = ${page_id} and profile_id = ${profile_id}`
+        result = await client.query(`select * from admin where page_id = ${page_id} and profile_id = ${profile_id}`)
       }
       else if (page_id && !profile_id) {
-        result = await sql.query`select * from admin where page_id = ${page_id}`
+        result = await client.query(`select * from admin where page_id = ${page_id}`)
       }
       else if (!page_id && profile_id) {
-        result = await sql.query`select * from admin where profile_id = ${profile_id}`
+        result = await client.query(`select * from admin where profile_id = ${profile_id}`)
       }
       else {
-        result = await sql.query`select * from admin`
+        result = await client.query(`select * from admin`)
       }
       
-      res.status(200).send(result.recordset)
+      res.status(200).send(result.rows)
     }
     catch (err) {
-      console.log(err)
+      console.log(err.detail)
       res.status(404).send(err)
     }
 
@@ -57,13 +57,13 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`insert into admin (page_id, profile_id, admin_since_date) values (${admin.page_id}, ${admin.profile_id}, DEFAULT)`
-      res.status(200).send(result)
+      const result = await client.query(`insert into admin (page_id, profile_id) values (${admin.page_id}, ${admin.profile_id})`)
+      res.status(200).send(result.rows)
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 
@@ -94,13 +94,13 @@ module.exports = function(app, sql) {
 
     //adding data to database
     try {
-      const result = await sql.query`delete from admin where page_id = ${admin.page_id} and profile_id = ${admin.profile_id}`
-      res.status(200).send(result)
+      const result = await client.query(`delete from admin where page_id = ${admin.page_id} and profile_id = ${admin.profile_id}`)
+      res.status(200).send(result.rows)
       return
     }
     catch (err) {
-      console.log(err.originalError.info.message)
-      res.status(404).send(err.originalError.info.message)
+      console.log(err.detail)
+      res.status(404).send(err)
       return
     }
 
