@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
 
-const URL = 'http://localhost:8080'
+const URL = 'https://cse3330.herokuapp.com'
 
 export default URL

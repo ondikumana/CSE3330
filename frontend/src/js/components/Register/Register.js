@@ -61,7 +61,7 @@ class Register extends React.Component {
             account_id: account_id
         })
             .then((databaseResponse) => {
-                const profileId = databaseResponse.data[0].account_id
+                const profileId = databaseResponse.data[0].profile_id
                 console.log('profile created', profileId)
 
                 this.fetchProfile(profileId)

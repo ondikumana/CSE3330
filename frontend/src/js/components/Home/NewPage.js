@@ -115,6 +115,7 @@ class NewPage extends Component {
             account_type: 'page'
         })
             .then((databaseResponse) => {
+                console.log(databaseResponse.data)
                 const account_id = databaseResponse.data[0].account_id
                 console.log('account created', account_id)
 
